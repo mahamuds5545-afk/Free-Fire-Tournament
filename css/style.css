@@ -1,34 +1,212 @@
-/* Main Styles */
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+:root {
+    --primary: #ff6600;
+    --secondary: #1a1a2e;
+    --accent: #00ccff;
+    --success: #00ff88;
+    --warning: #ffcc00;
+    --danger: #ff3300;
+    --dark: #0f0f1e;
+    --light: #f8f9fa;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--dark);
+    color: white;
+}
+
+/* Navigation */
+.ff-navbar {
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid var(--primary);
 }
 
 /* Buttons */
-.btn-primary {
-    background: #ff6600;
+.btn-ff {
+    background: linear-gradient(90deg, var(--primary), var(--danger));
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
+    border-radius: 6px;
+    padding: 10px 25px;
+    font-weight: bold;
+    transition: all 0.3s;
 }
 
-.btn-primary:hover {
-    background: #e55a00;
+.btn-ff:hover {
+    background: linear-gradient(90deg, var(--danger), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 102, 0, 0.4);
 }
 
-/* Cards */
-.card {
-    background: rgba(255, 255, 255, 0.1);
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+    padding: 100px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: url('https://cdn.pixabay.com/photo/2017/07/10/23/45/cubes-2492010_1280.jpg');
+    opacity: 0.05;
+    top: 0;
+    left: 0;
+}
+
+.hero-img {
+    max-width: 400px;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+/* Feature Cards */
+.feature-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 102, 0, 0.3);
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(255, 102, 0, 0.2);
+}
+
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, var(--primary), var(--danger));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 30px;
+}
+
+/* Tournament Cards */
+.tournament-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 102, 0, 0.3);
     border-radius: 10px;
     padding: 20px;
-    margin: 10px 0;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.tournament-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(255, 102, 0, 0.2);
+}
+
+.tournament-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.tournament-status.live {
+    background: var(--danger);
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+.tournament-status.upcoming {
+    background: var(--warning);
+    color: black;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.tournament-info {
+    display: flex;
+    justify-content: space-between;
+    margin: 15px 0;
+}
+
+/* Auth Page */
+.auth-page {
+    background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+}
+
+.auth-card {
+    background: rgba(26, 26, 46, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 102, 0, 0.3);
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.auth-card .nav-tabs {
+    border-bottom: 1px solid rgba(255, 102, 0, 0.3);
+}
+
+.auth-card .nav-link {
+    color: #aaa;
+    border: none;
+    background: transparent;
+}
+
+.auth-card .nav-link.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+}
+
+.auth-card .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 6px;
+}
+
+.auth-card .form-control:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem rgba(255, 102, 0, 0.25);
+    color: white;
+}
+
+/* Footer */
+.ff-footer {
+    background: var(--secondary);
+    border-top: 2px solid var(--primary);
+    padding: 40px 0 20px;
+    margin-top: 50px;
+}
+
+/* Utility */
+.text-ff { color: var(--primary); }
+.bg-ff { background: var(--primary); }
+.text-accent { color: var(--accent); }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 0;
+        text-align: center;
+    }
+    
+    .auth-card {
+        padding: 25px;
+    }
 }
