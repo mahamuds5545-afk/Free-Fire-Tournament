@@ -1,54 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - FF Tournament</title>
-    <link rel="stylesheet" href="css/style.css">
     <style>
-        .login-box {
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 30px;
-            background: rgba(255,255,255,0.1);
+        .login-container { 
+            max-width: 400px; 
+            margin: 50px auto; 
+            padding: 30px; 
+            background: rgba(26, 26, 46, 0.9);
             border-radius: 10px;
+            color: white;
         }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border: 1px solid #ff6600;
             border-radius: 5px;
-            border: 1px solid #ccc;
+            background: rgba(255,255,255,0.1);
+            color: white;
         }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: #ff6600;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .tab-container { display: flex; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; }
+        .tab.active { background: #ff6600; }
+        .form-container { display: none; }
+        .form-container.active { display: block; }
     </style>
 </head>
-<body>
-    <div style="background: #ff6600; padding: 15px;">
-        <h2 style="margin:0; color:white;">Login / Register</h2>
+<body style="background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%); min-height: 100vh;">
+    <div class="login-container">
+        <h2 style="text-align: center; color: #ff6600;">
+            <i class="fas fa-fire"></i> FF Tournament
+        </h2>
+        
+        <div class="tab-container">
+            <div class="tab active" onclick="showTab('login')">Login</div>
+            <div class="tab" onclick="showTab('register')">Register</div>
+        </div>
+        
+        <!-- Login Form -->
+        <div id="loginForm" class="form-container active">
+            <h3>Login to Your Account</h3>
+            <input type="email" id="loginEmail" placeholder="Email" value="test@test.com">
+            <input type="password" id="loginPassword" placeholder="Password" value="123456">
+            <button onclick="performLogin()">Login</button>
+            
+            <p style="text-align: center; margin-top: 15px;">
+                <a href="index.html" style="color: #ffcc00;">← Back to Home</a>
+            </p>
+        </div>
+        
+        <!-- Register Form -->
+        <div id="registerForm" class="form-container">
+            <h3>Create New Account</h3>
+            <input type="text" id="registerName" placeholder="Full Name">
+            <input type="email" id="registerEmail" placeholder="Email">
+            <input type="password" id="registerPassword" placeholder="Password">
+            <input type="text" id="registerFFID" placeholder="Free Fire ID">
+            <button onclick="performRegister()">Register Now</button>
+            
+            <p style="text-align: center; margin-top: 15px;">
+                Already have account? 
+                <a href="#" onclick="showTab('login')" style="color: #ffcc00;">Login here</a>
+            </p>
+        </div>
     </div>
     
-    <div class="login-box">
-        <h3>Login to Account</h3>
-        <input type="email" placeholder="Email" id="email">
-        <input type="password" placeholder="Password" id="password">
-        <button class="btn-primary" onclick="login()">Login</button>
-        
-        <p style="text-align: center; margin-top: 20px;">
-            Don't have account? 
-            <a href="#" onclick="showRegister()">Register here</a>
-        </p>
-    </div>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase v9 Modular SDK -->
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/auth.js"></script>
     
     <script>
-        function login() {
-            alert("Login feature will be added!");
-            window.location.href = "user.html";
+        // Tab switching function
+        function showTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update forms
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('registerForm').classList.remove('active');
+            document.getElementById(tabName + 'Form').classList.add('active');
         }
         
-        function showRegister() {
-            alert("Register form will appear here!");
+        // Login function
+        async function performLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if(!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+            
+            const success = await loginUser(email, password);
+            if(success) {
+                window.location.href = 'user.html';
+            }
         }
+        
+        // Register function
+        async function performRegister() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const ffid = document.getElementById('registerFFID').value;
+            
+            if(!name || !email || !password || !ffid) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const success = await registerUser(name, email, password, ffid);
+            if(success) {
+                alert('Registration successful! Please login.');
+                showTab('login');
+            }
+        }
+        
+        // Enter key support
+        document.addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') {
+                if(document.getElementById('loginForm').classList.contains('active')) {
+                    performLogin();
+                } else {
+                    performRegister();
+                }
+            }
+        });
     </script>
-    <script src="js/common.js"></script>
 </body>
 </html>
