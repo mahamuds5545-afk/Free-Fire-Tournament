@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/user.css">
+    <style>
+        .user-header {
+            background: #ff6600;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .tournament-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px;
+        }
+        .tournament-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-header">
+        <h2>🎮 Player Dashboard</h2>
+        <div>
+            Balance: <strong>৳0</strong>
+            <a href="index.html" style="color:white; margin-left:20px;">Logout</a>
+        </div>
+    </div>
+    
+    <div style="padding: 20px;">
+        <h3>Available Tournaments</h3>
+        
+        <div class="tournament-list">
+            <div class="tournament-card">
+                <h4>Solo Tournament</h4>
+                <p>Entry Fee: ৳100</p>
+                <p>Prize: ৳1000</p>
+                <button class="btn-primary">Join Now</button>
+            </div>
+            
+            <div class="tournament-card">
+                <h4>Duo Tournament</h4>
+                <p>Entry Fee: ৳200</p>
+                <p>Prize: ৳2000</p>
+                <button class="btn-primary">Join Now</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/user.js"></script>
+    <script src="js/common.js"></script>
+</body>
+</html>

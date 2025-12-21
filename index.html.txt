@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Tournament - Home</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial;
+        }
+        .header {
+            background: #ff6600;
+            padding: 20px;
+            text-align: center;
+        }
+        .btn {
+            background: #ff6600;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Free Fire Tournament</h1>
+        <p>Win Real Cash Prizes!</p>
+    </div>
+    
+    <div style="padding: 20px; text-align: center;">
+        <h2>Welcome to Tournament Platform</h2>
+        <p>Join exciting tournaments and win big!</p>
+        
+        <a href="login.html" class="btn">Login</a>
+        <a href="login.html" class="btn">Register</a>
+        <a href="admin.html" class="btn">Admin Panel</a>
+        <a href="user.html" class="btn">User Dashboard</a>
+    </div>
+    
+    <script src="js/common.js"></script>
+</body>
+</html>
