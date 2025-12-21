@@ -1,416 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - FF Tournament</title>
-    <style>
-        .login-container { 
-            max-width: 400px; 
-            margin: 50px auto; 
-            padding: 30px; 
-            background: rgba(26, 26, 46, 0.9);
-            border-radius: 10px;
-            color: white;
-            box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
-        }
-        input { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 10px 0; 
-            border: 1px solid #ff6600;
-            border-radius: 5px;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            box-sizing: border-box;
-        }
-        input:focus {
-            outline: none;
-            border-color: #ff9900;
-            box-shadow: 0 0 5px rgba(255, 102, 0, 0.5);
-        }
-        button { 
-            width: 100%; 
-            padding: 12px; 
-            background: #ff6600;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px 0;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #ff9900;
-        }
-        button:disabled {
-            background: #666;
-            cursor: not-allowed;
-        }
-        .tab-container { 
-            display: flex; 
-            margin-bottom: 20px; 
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .tab { 
-            flex: 1; 
-            padding: 10px; 
-            text-align: center; 
-            cursor: pointer; 
-            transition: all 0.3s;
-        }
-        .tab.active { 
-            background: #ff6600; 
-            font-weight: bold;
-        }
-        .form-container { 
-            display: none; 
-            animation: fadeIn 0.5s;
-        }
-        .form-container.active { 
-            display: block; 
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .error-message {
-            color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.1);
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
-        }
-        .success-message {
-            color: #51cf66;
-            background: rgba(81, 207, 102, 0.1);
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
-        }
-        .loading {
-            text-align: center;
-            padding: 10px;
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body style="background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%); min-height: 100vh; margin: 0; padding: 20px;">
-    <div class="login-container">
-        <h2 style="text-align: center; color: #ff6600; margin-bottom: 30px;">
-            <i class="fas fa-fire"></i> Free Fire Tournament
-        </h2>
-        
-        <div class="tab-container">
-            <div class="tab active" onclick="showTab('login')">Login</div>
-            <div class="tab" onclick="showTab('register')">Register</div>
-        </div>
-        
-        <!-- Error/Success Messages -->
-        <div id="errorMessage" class="error-message"></div>
-        <div id="successMessage" class="success-message"></div>
-        <div id="loading" class="loading">
-            <i class="fas fa-spinner fa-spin"></i> Processing...
-        </div>
-        
-        <!-- Login Form -->
-        <div id="loginForm" class="form-container active">
-            <h3 style="text-align: center; margin-bottom: 20px;">Login to Your Account</h3>
-            <input type="email" id="loginEmail" placeholder="Email" value="test@test.com">
-            <input type="password" id="loginPassword" placeholder="Password" value="123456">
-            <button onclick="performLogin()" id="loginBtn">Login</button>
-            
-            <p style="text-align: center; margin-top: 20px; font-size: 14px;">
-                <a href="index.html" style="color: #ffcc00; text-decoration: none;">
-                    <i class="fas fa-arrow-left"></i> Back to Home
-                </a>
-            </p>
-        </div>
-        
-        <!-- Register Form -->
-        <div id="registerForm" class="form-container">
-            <h3 style="text-align: center; margin-bottom: 20px;">Create New Account</h3>
-            <input type="text" id="registerName" placeholder="Full Name">
-            <input type="email" id="registerEmail" placeholder="Email">
-            <input type="password" id="registerPassword" placeholder="Password (min 6 characters)">
-            <input type="text" id="registerFFID" placeholder="Free Fire ID">
-            <button onclick="performRegister()" id="registerBtn">Register Now</button>
-            
-            <p style="text-align: center; margin-top: 20px; font-size: 14px;">
-                Already have account? 
-                <a href="#" onclick="showTab('login')" style="color: #ffcc00; text-decoration: none;">Login here</a>
-            </p>
+<body class="auth-page">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-card">
+                    <div class="text-center mb-4">
+                        <h2><i class="fas fa-fire text-ff"></i> FF Tournament</h2>
+                        <p class="text-muted">Sign in to your account</p>
+                    </div>
+
+                    <ul class="nav nav-tabs mb-4" id="authTab">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-target="#login">Login</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-target="#register">Register</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Login Form -->
+                        <div class="tab-pane fade show active" id="login">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="loginEmail" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="loginPassword" required>
+                                </div>
+                                <button type="submit" class="btn btn-ff w-100">Login</button>
+                            </form>
+                            <div class="text-center mt-3">
+                                <a href="#" onclick="resetPassword()">Forgot password?</a>
+                            </div>
+                        </div>
+
+                        <!-- Register Form -->
+                        <div class="tab-pane fade" id="register">
+                            <form id="registerForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="registerName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="registerEmail" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="registerPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Free Fire ID</label>
+                                    <input type="text" class="form-control" id="registerFFID" required>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="terms" required>
+                                    <label class="form-check-label">I agree to terms & conditions</label>
+                                </div>
+                                <button type="submit" class="btn btn-ff w-100">Create Account</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="index.html" class="text-muted"><i class="fas fa-arrow-left"></i> Back to Home</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Firebase SDK (compatibility version) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyA9HKKBo6KozIskG2oEF0PO7UCCScIxXdQ",
-            authDomain: "freefiregame-85e60.firebaseapp.com",
-            databaseURL: "https://freefiregame-85e60-default-rtdb.firebaseio.com",
-            projectId: "freefiregame-85e60",
-            storageBucket: "freefiregame-85e60.firebasestorage.app",
-            messagingSenderId: "961424698248",
-            appId: "1:961424698248:web:32e3d79f1bdfefaa9b283d",
-            measurementId: "G-7D31XM1SBC"
-        };
-        
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-        
-        // Tab switching function
-        function showTab(tabName) {
-            // Update tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
-            
-            // Update forms
-            document.querySelectorAll('.form-container').forEach(form => {
-                form.classList.remove('active');
-            });
-            document.getElementById(tabName + 'Form').classList.add('active');
-            
-            // Clear messages
-            clearMessages();
-        }
-        
-        // Clear error/success messages
-        function clearMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-        }
-        
-        // Show error message
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            document.getElementById('successMessage').style.display = 'none';
-        }
-        
-        // Show success message
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            document.getElementById('errorMessage').style.display = 'none';
-        }
-        
-        // Show loading
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-        }
-        
-        // Login function
-        async function performLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const loginBtn = document.getElementById('loginBtn');
-            
-            if(!email || !password) {
-                showError('Please enter email and password');
-                return;
-            }
-            
-            // Show loading
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Logging in...';
-            showLoading(true);
-            clearMessages();
-            
-            try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Get user data from database
-                const userRef = database.ref('users/' + user.uid);
-                const snapshot = await userRef.once('value');
-                
-                if(snapshot.exists()) {
-                    const userData = snapshot.val();
-                    showSuccess('Login successful! Redirecting...');
-                    
-                    // Redirect based on user role
-                    setTimeout(() => {
-                        if(userData.role === 'admin') {
-                            window.location.href = 'admin.html';
-                        } else {
-                            window.location.href = 'user.html';
-                        }
-                    }, 1500);
-                } else {
-                    showError('User data not found. Please contact admin.');
-                    await auth.signOut();
-                }
-                
-            } catch (error) {
-                let errorMessage = 'Login failed: ';
-                switch(error.code) {
-                    case 'auth/user-not-found':
-                        errorMessage = 'No account found with this email';
-                        break;
-                    case 'auth/wrong-password':
-                        errorMessage = 'Incorrect password';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage = 'Invalid email address';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMessage = 'Account has been disabled';
-                        break;
-                    default:
-                        errorMessage = error.message;
-                }
-                showError(errorMessage);
-            } finally {
-                // Reset button
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login';
-                showLoading(false);
-            }
-        }
-        
-        // Register function
-        async function performRegister() {
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const ffid = document.getElementById('registerFFID').value;
-            const registerBtn = document.getElementById('registerBtn');
-            
-            // Validation
-            if(!name || !email || !password || !ffid) {
-                showError('Please fill all fields');
-                return;
-            }
-            
-            if(password.length < 6) {
-                showError('Password must be at least 6 characters');
-                return;
-            }
-            
-            if(!email.includes('@') || !email.includes('.')) {
-                showError('Please enter a valid email address');
-                return;
-            }
-            
-            // Show loading
-            registerBtn.disabled = true;
-            registerBtn.textContent = 'Creating Account...';
-            showLoading(true);
-            clearMessages();
-            
-            try {
-                // Create user in Firebase Authentication
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Save user data to Realtime Database
-                await database.ref('users/' + user.uid).set({
-                    name: name,
-                    email: email,
-                    ffid: ffid,
-                    balance: 5000, // Starting balance
-                    role: 'user',
-                    joinDate: new Date().toISOString(),
-                    isActive: true,
-                    createdAt: Date.now()
-                });
-                
-                showSuccess('Registration successful! You will be logged in automatically...');
-                
-                // Auto login and redirect
-                setTimeout(() => {
-                    window.location.href = 'user.html';
-                }, 2000);
-                
-            } catch (error) {
-                let errorMessage = 'Registration failed: ';
-                switch(error.code) {
-                    case 'auth/email-already-in-use':
-                        errorMessage = 'Email is already registered';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage = 'Invalid email address';
-                        break;
-                    case 'auth/weak-password':
-                        errorMessage = 'Password is too weak';
-                        break;
-                    case 'auth/operation-not-allowed':
-                        errorMessage = 'Registration is currently disabled';
-                        break;
-                    default:
-                        errorMessage = error.message;
-                }
-                showError(errorMessage);
-            } finally {
-                // Reset button
-                registerBtn.disabled = false;
-                registerBtn.textContent = 'Register Now';
-                showLoading(false);
-            }
-        }
-        
-        // Auto-login test user for quick testing
-        function setupTestLogin() {
-            document.getElementById('loginEmail').addEventListener('focus', function() {
-                if(this.value === 'test@test.com') {
-                    showSuccess('Test account ready. Click Login to test.');
-                }
-            });
-        }
-        
-        // Check if user is already logged in
-        auth.onAuthStateChanged((user) => {
-            if(user) {
-                // User is already logged in, redirect to appropriate page
-                const userRef = database.ref('users/' + user.uid);
-                userRef.once('value').then((snapshot) => {
-                    if(snapshot.exists()) {
-                        const userData = snapshot.val();
-                        if(userData.role === 'admin') {
-                            window.location.href = 'admin.html';
-                        } else {
-                            window.location.href = 'user.html';
-                        }
-                    }
-                });
-            }
-        });
-        
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            setupTestLogin();
-            console.log('Login page loaded');
-        });
-        
-        // Allow Enter key to submit forms
-        document.addEventListener('keypress', function(event) {
-            if(event.key === 'Enter') {
-                const activeTab = document.querySelector('.tab.active').textContent.toLowerCase();
-                if(activeTab === 'login') {
-                    performLogin();
-                } else {
-                    performRegister();
-                }
-            }
-        });
-    </script>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>
