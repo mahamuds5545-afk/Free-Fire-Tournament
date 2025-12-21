@@ -1,111 +1,188 @@
-// Firebase configuration
-const firebaseConfig = {
-   apiKey: "AIzaSyDXKSgO8ArAd32r5kHW4KzM4EHfFTd7AB4",
-  authDomain: "my-new-ff-app.firebaseapp.com",
-  projectId: "my-new-ff-app",
-  storageBucket: "my-new-ff-app.firebasestorage.app",
-  messagingSenderId: "721102554732",
-  appId: "1:721102554732:web:736adb31819cda998dba49",
-  measurementId: "G-YV8C2FFV5L"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
 // Global variables
-let adminSecretCode = "";
+let adminSecretCode = "ADMIN12345"; // Default code
+let currentUserData = null;
 
-// Fetch admin secret code on page load
-document.addEventListener('DOMContentLoaded', async function() {
+// Fetch admin config from Realtime Database
+async function fetchAdminConfig() {
     try {
-        const configDoc = await db.collection('config').doc('adminConfig').get();
-        if (configDoc.exists) {
-            adminSecretCode = configDoc.data().adminSecretCode;
+        console.log("🔄 Fetching admin config from Realtime DB...");
+        
+        // Using promise-based approach
+        const snapshot = await database.ref('config/adminConfig').once('value');
+        
+        if (snapshot.exists()) {
+            const config = snapshot.val();
+            adminSecretCode = config.adminSecretCode || "ADMIN12345";
+            console.log("✅ Admin config loaded:", adminSecretCode);
+            return true;
         } else {
-            // Create default admin config if not exists
+            // Create default config
+            console.log("📝 Creating default admin config...");
             adminSecretCode = "ADMIN12345";
-            await db.collection('config').doc('adminConfig').set({
+            await database.ref('config/adminConfig').set({
                 adminSecretCode: adminSecretCode,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                createdBy: "system",
+                note: "Default admin code. Change in admin panel."
             });
+            console.log("✅ Default admin config created");
+            return true;
         }
     } catch (error) {
-        console.error("Error fetching admin config:", error);
-        adminSecretCode = "ADMIN12345"; // Default code
+        console.error("❌ Error loading admin config:", error);
+        // Use default code
+        adminSecretCode = "ADMIN12345";
+        showAlert("Note: Using default admin code", "info");
+        return false;
     }
+}
 
-    initializeTabs();
+// Initialize page
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log("🚀 Initializing authentication system...");
+    
+    try {
+        // Load admin config
+        await fetchAdminConfig();
+        
+        // Initialize UI components
+        initializeUI();
+        
+        // Check if user is already logged in
+        checkExistingAuth();
+        
+    } catch (error) {
+        console.error("❌ Initialization error:", error);
+        showAlert("System initialization failed. Please refresh.", "danger");
+    }
 });
 
-// Initialize tabs
-function initializeTabs() {
-    // Bootstrap tab switching
-    const tabButtons = document.querySelectorAll('#authTab button');
+// Initialize UI components
+function initializeUI() {
+    // Tab switching
+    const tabButtons = document.querySelectorAll('#authTab button[data-bs-target]');
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const target = this.getAttribute('data-bs-target');
-            
-            // Remove active class from all tabs and buttons
-            document.querySelectorAll('.tab-pane').forEach(tab => {
-                tab.classList.remove('show', 'active');
-            });
-            document.querySelectorAll('#authTab .nav-link').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to current tab and button
-            this.classList.add('active');
-            const targetTab = document.querySelector(target);
-            targetTab.classList.add('show', 'active');
-            
-            // Reset admin toggle when switching tabs
-            if (target === '#register') {
-                resetAdminToggle();
-            }
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            switchTab(this.getAttribute('data-bs-target'));
         });
     });
-
+    
+    // Form submissions
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLoginSubmit);
+    }
+    
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegisterSubmit);
+    }
+    
     // Admin toggle for registration
     const adminToggle = document.getElementById('adminToggle');
     if (adminToggle) {
         adminToggle.addEventListener('change', function() {
             toggleAdminFields(this.checked);
         });
+        // Initialize hidden state
+        toggleAdminFields(false);
     }
-
-    // Admin toggle for login
-    const adminToggleLogin = document.getElementById('adminToggleLogin');
-    if (adminToggleLogin) {
-        adminToggleLogin.addEventListener('change', function() {
-            // Nothing special needed for login
+    
+    // Forgot password link
+    const forgotPasswordLink = document.querySelector('a[onclick*="resetPassword"]');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetPassword();
         });
     }
+}
 
-    // Check if user is already logged in
-    auth.onAuthStateChanged(user => {
+// Switch between login/register tabs
+function switchTab(targetId) {
+    // Remove active classes
+    document.querySelectorAll('#authTab .nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('show', 'active');
+    });
+    
+    // Add active classes
+    const activeButton = document.querySelector(`#authTab button[data-bs-target="${targetId}"]`);
+    const activeTab = document.querySelector(targetId);
+    
+    if (activeButton && activeTab) {
+        activeButton.classList.add('active');
+        activeTab.classList.add('show', 'active');
+    }
+}
+
+// Toggle admin fields visibility
+function toggleAdminFields(isAdmin) {
+    const adminField = document.querySelector('.admin-field');
+    const userField = document.querySelector('.user-field');
+    
+    if (adminField && userField) {
+        if (isAdmin) {
+            adminField.style.display = 'block';
+            userField.style.display = 'none';
+        } else {
+            adminField.style.display = 'none';
+            userField.style.display = 'block';
+        }
+    }
+}
+
+// Check existing authentication
+function checkExistingAuth() {
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
-            // Redirect based on user role
-            checkUserRole(user.uid);
+            console.log("👤 User already logged in:", user.email);
+            
+            // Get user data from Realtime DB
+            const userSnapshot = await database.ref('users/' + user.uid).once('value');
+            
+            if (userSnapshot.exists()) {
+                const userData = userSnapshot.val();
+                currentUserData = userData;
+                
+                // Store in localStorage
+                localStorage.setItem('currentUser', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    name: userData.name || user.email.split('@')[0],
+                    isAdmin: userData.isAdmin || false,
+                    ffid: userData.ffid || '',
+                    status: userData.status || 'active'
+                }));
+                
+                // Redirect based on role
+                if (window.location.pathname.includes('login.html') || 
+                    window.location.pathname.includes('register.html')) {
+                    setTimeout(() => {
+                        if (userData.isAdmin) {
+                            window.location.href = 'admin-dashboard.html';
+                        } else {
+                            window.location.href = 'user-dashboard.html';
+                        }
+                    }, 1000);
+                }
+            }
         }
     });
-
-    // Form submissions
-    document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
-    document.getElementById('registerForm')?.addEventListener('submit', handleRegister);
 }
 
 // Handle login form submission
-async function handleLogin(e) {
+async function handleLoginSubmit(e) {
     e.preventDefault();
     
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     const isAdmin = document.getElementById('adminToggleLogin')?.checked || false;
     
-    if (!email || !password) {
-        showAlert('Please fill in all fields', 'danger');
+    if (!validateLoginForm(email, password)) {
         return;
     }
     
@@ -113,7 +190,7 @@ async function handleLogin(e) {
 }
 
 // Handle register form submission
-async function handleRegister(e) {
+async function handleRegisterSubmit(e) {
     e.preventDefault();
     
     const name = document.getElementById('registerName').value.trim();
@@ -122,185 +199,244 @@ async function handleRegister(e) {
     const ffid = document.getElementById('registerFFID')?.value.trim() || '';
     const isAdmin = document.getElementById('adminToggle')?.checked || false;
     const adminCode = document.getElementById('adminCode')?.value || '';
-    const terms = document.getElementById('terms').checked;
+    const terms = document.getElementById('terms');
     
-    // Validation
+    if (!validateRegisterForm(name, email, password, ffid, isAdmin, adminCode, terms)) {
+        return;
+    }
+    
+    await registerUser(name, email, password, ffid, isAdmin, adminCode);
+}
+
+// Validate login form
+function validateLoginForm(email, password) {
+    if (!email || !password) {
+        showAlert('Please enter both email and password', 'danger');
+        return false;
+    }
+    
+    if (!validateEmail(email)) {
+        showAlert('Please enter a valid email address', 'danger');
+        return false;
+    }
+    
+    return true;
+}
+
+// Validate register form
+function validateRegisterForm(name, email, password, ffid, isAdmin, adminCode, terms) {
+    // Basic validation
     if (!name || !email || !password) {
         showAlert('Please fill in all required fields', 'danger');
-        return;
+        return false;
     }
     
-    if (!terms) {
+    if (!validateEmail(email)) {
+        showAlert('Please enter a valid email address', 'danger');
+        return false;
+    }
+    
+    if (password.length < 6) {
+        showAlert('Password must be at least 6 characters', 'danger');
+        return false;
+    }
+    
+    if (!terms?.checked) {
         showAlert('Please agree to terms & conditions', 'danger');
-        return;
+        return false;
     }
     
-    // Admin validation
+    // Role-specific validation
     if (isAdmin) {
         if (!adminCode) {
             showAlert('Please enter admin code', 'danger');
-            return;
-        }
-        
-        if (adminCode !== adminSecretCode) {
-            showAlert('Invalid admin code', 'danger');
-            return;
+            return false;
         }
     } else {
         if (!ffid) {
             showAlert('Free Fire ID is required for players', 'danger');
-            return;
+            return false;
         }
     }
     
-    await registerUser(name, email, password, ffid, isAdmin);
+    return true;
 }
 
-// Toggle admin fields visibility
-function toggleAdminFields(isAdmin) {
-    const adminField = document.querySelector('.admin-field');
-    const userField = document.querySelector('.user-field');
-    
-    if (isAdmin) {
-        adminField.style.display = 'block';
-        userField.style.display = 'none';
-    } else {
-        adminField.style.display = 'none';
-        userField.style.display = 'block';
-    }
+// Email validation
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
 }
 
-// Reset admin toggle
-function resetAdminToggle() {
-    const adminToggle = document.getElementById('adminToggle');
-    if (adminToggle) {
-        adminToggle.checked = false;
-        toggleAdminFields(false);
-    }
-}
-
-// Login Function
+// Login user
 async function loginUser(email, password, isAdmin = false) {
-    showLoading(true);
+    showLoading(true, 'login');
     
     try {
+        console.log("🔐 Attempting login for:", email);
+        
+        // Sign in with Firebase Auth
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
         
-        // Get user data from Firestore
-        const userDoc = await db.collection('users').doc(user.uid).get();
+        console.log("✅ Auth successful, checking user data...");
         
-        if (!userDoc.exists) {
-            throw new Error('User not found. Please register first.');
-        }
+        // Get user data from Realtime Database
+        const userRef = database.ref('users/' + user.uid);
+        const snapshot = await userRef.once('value');
         
-        const userData = userDoc.data();
+        let userData;
         
-        // Check if account is active
-        if (userData.status === 'inactive') {
-            throw new Error('Your account has been deactivated. Contact support.');
+        if (snapshot.exists()) {
+            userData = snapshot.val();
+            console.log("📊 User data found:", userData);
+        } else {
+            // Create new user entry if not exists
+            userData = {
+                name: user.email.split('@')[0],
+                email: user.email,
+                isAdmin: false,
+                ffid: '',
+                status: 'active',
+                emailVerified: user.emailVerified,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            await userRef.set(userData);
+            console.log("📝 Created new user entry in Realtime DB");
         }
         
         // Admin validation
         if (isAdmin && !userData.isAdmin) {
-            throw new Error('Access denied. This account is not an administrator.');
+            throw new Error('This account is not an administrator.');
         }
         
-        // If trying to access admin panel without admin toggle
-        if (userData.isAdmin && !isAdmin) {
-            showAlert('This is an admin account. Please check "Login as Administrator"', 'warning');
-            return;
-        }
+        // Update last login
+        await userRef.update({
+            lastLogin: firebase.database.ServerValue.TIMESTAMP,
+            emailVerified: user.emailVerified
+        });
         
-        // Store user data in localStorage
+        // Store user data
+        currentUserData = userData;
         localStorage.setItem('currentUser', JSON.stringify({
             uid: user.uid,
             email: user.email,
             name: userData.name,
-            isAdmin: userData.isAdmin || false,
+            isAdmin: userData.isAdmin,
             ffid: userData.ffid || '',
-            status: userData.status || 'active'
+            status: userData.status || 'active',
+            emailVerified: user.emailVerified
         }));
         
-        showAlert('Login successful! Redirecting...', 'success');
+        // Show success message
+        let welcomeMessage = `Welcome back, ${userData.name}!`;
+        if (!user.emailVerified) {
+            welcomeMessage += ' Please verify your email.';
+        }
         
-        // Redirect based on role
+        showAlert(welcomeMessage, 'success');
+        
+        // Redirect after delay
         setTimeout(() => {
             if (userData.isAdmin) {
                 window.location.href = 'admin-dashboard.html';
             } else {
                 window.location.href = 'user-dashboard.html';
             }
-        }, 1500);
+        }, 2000);
         
     } catch (error) {
-        showAlert(error.message, 'danger');
+        console.error('❌ Login error:', error);
+        handleAuthError(error);
     } finally {
-        showLoading(false);
+        showLoading(false, 'login');
     }
 }
 
-// Register Function
-async function registerUser(name, email, password, ffid, isAdmin = false) {
-    showLoading(true);
+// Register new user
+async function registerUser(name, email, password, ffid, isAdmin = false, adminCode = '') {
+    showLoading(true, 'register');
     
     try {
+        console.log("📝 Registering new user:", email);
+        
+        // Verify admin code if registering as admin
+        if (isAdmin) {
+            if (adminCode !== adminSecretCode) {
+                throw new Error('Invalid admin code');
+            }
+        }
+        
         // Create user in Firebase Auth
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
         
+        console.log("✅ User created in Auth, sending verification email...");
+        
         // Send email verification
         await user.sendEmailVerification();
         
-        // Create user document in Firestore
-        await db.collection('users').doc(user.uid).set({
+        // Prepare user data for Realtime Database
+        const userData = {
             name: name,
             email: email,
             ffid: isAdmin ? '' : ffid,
             isAdmin: isAdmin,
             status: 'active',
             emailVerified: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastLogin: firebase.database.ServerValue.TIMESTAMP,
+            profileComplete: false
+        };
         
-        // Create additional data based on role
+        // Save to Realtime Database
+        const userRef = database.ref('users/' + user.uid);
+        await userRef.set(userData);
+        
+        // Save to role-specific collection
         if (isAdmin) {
-            await db.collection('admins').doc(user.uid).set({
-                email: email,
-                name: name,
+            await database.ref('admins/' + user.uid).set({
+                ...userData,
                 permissions: ['manage_tournaments', 'manage_users', 'view_reports'],
-                createdAt: new Date()
+                adminSince: firebase.database.ServerValue.TIMESTAMP
             });
-            showAlert('Admin account created successfully! Please verify your email.', 'success');
         } else {
-            await db.collection('players').doc(user.uid).set({
-                email: email,
-                name: name,
-                ffid: ffid,
+            await database.ref('players/' + user.uid).set({
+                ...userData,
                 stats: {
                     totalMatches: 0,
                     totalKills: 0,
                     totalWins: 0,
-                    winRate: 0
+                    winRate: 0,
+                    rank: 'Bronze',
+                    points: 0
                 },
-                createdAt: new Date(),
+                tournamentHistory: {},
                 teamId: null
             });
-            showAlert('Player account created successfully! Please verify your email.', 'success');
         }
         
-        // Store user data
+        // Store in localStorage
+        currentUserData = userData;
         localStorage.setItem('currentUser', JSON.stringify({
             uid: user.uid,
             email: user.email,
             name: name,
             isAdmin: isAdmin,
             ffid: isAdmin ? '' : ffid,
-            emailVerified: false
+            emailVerified: false,
+            createdAt: Date.now()
         }));
         
-        // Redirect after 3 seconds
+        // Show success message
+        const successMessage = isAdmin 
+            ? 'Admin account created successfully! Please check your email for verification.' 
+            : `Welcome ${name}! Account created. Please verify your email and complete your profile.`;
+        
+        showAlert(successMessage, 'success');
+        
+        // Redirect after delay
         setTimeout(() => {
             if (isAdmin) {
                 window.location.href = 'admin-dashboard.html';
@@ -310,103 +446,91 @@ async function registerUser(name, email, password, ffid, isAdmin = false) {
         }, 3000);
         
     } catch (error) {
-        let errorMessage = error.message;
-        
-        // User-friendly error messages
-        if (error.code === 'auth/email-already-in-use') {
-            errorMessage = 'This email is already registered. Please login instead.';
-        } else if (error.code === 'auth/weak-password') {
-            errorMessage = 'Password should be at least 6 characters long.';
-        } else if (error.code === 'auth/invalid-email') {
-            errorMessage = 'Invalid email address.';
-        }
-        
-        showAlert(errorMessage, 'danger');
+        console.error('❌ Registration error:', error);
+        handleAuthError(error);
     } finally {
-        showLoading(false);
+        showLoading(false, 'register');
     }
 }
 
-// Check User Role Function
-async function checkUserRole(uid) {
-    try {
-        const userDoc = await db.collection('users').doc(uid).get();
-        
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            
-            // Update last login
-            await db.collection('users').doc(uid).update({
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Check current page and redirect if needed
-            const currentPage = window.location.pathname;
-            
-            if (currentPage.includes('login.html') || currentPage.includes('register.html')) {
-                if (userData.isAdmin) {
-                    window.location.href = 'admin-dashboard.html';
-                } else {
-                    window.location.href = 'user-dashboard.html';
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error checking user role:', error);
+// Handle authentication errors
+function handleAuthError(error) {
+    let errorMessage = 'Authentication failed. ';
+    
+    switch(error.code) {
+        case 'auth/email-already-in-use':
+            errorMessage = 'This email is already registered. Please login instead.';
+            break;
+        case 'auth/invalid-email':
+            errorMessage = 'Invalid email address.';
+            break;
+        case 'auth/user-not-found':
+            errorMessage = 'No account found with this email.';
+            break;
+        case 'auth/wrong-password':
+            errorMessage = 'Incorrect password.';
+            break;
+        case 'auth/weak-password':
+            errorMessage = 'Password should be at least 6 characters.';
+            break;
+        case 'auth/too-many-requests':
+            errorMessage = 'Too many attempts. Please try again later.';
+            break;
+        case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your connection.';
+            break;
+        default:
+            errorMessage += error.message;
     }
+    
+    showAlert(errorMessage, 'danger');
 }
 
-// Password Reset Function
-function resetPassword() {
-    const email = document.getElementById('loginEmail')?.value;
+// Password reset function
+async function resetPassword() {
+    let email = document.getElementById('loginEmail')?.value;
     
     if (!email) {
-        email = prompt('Please enter your email address:');
+        email = prompt('Enter your email address for password reset:');
+        if (!email) return;
     }
     
-    if (email) {
-        auth.sendPasswordResetEmail(email)
-            .then(() => {
-                showAlert('Password reset email sent! Check your inbox.', 'success');
-            })
-            .catch(error => {
-                let errorMessage = error.message;
-                if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'No account found with this email.';
-                }
-                showAlert(errorMessage, 'danger');
-            });
+    try {
+        await auth.sendPasswordResetEmail(email);
+        showAlert('Password reset email sent! Check your inbox.', 'success');
+    } catch (error) {
+        console.error('Password reset error:', error);
+        showAlert('Error sending reset email: ' + error.message, 'danger');
     }
 }
 
 // Show loading state
-function showLoading(isLoading) {
-    const loginBtn = document.querySelector('#loginForm button[type="submit"]');
-    const registerBtn = document.querySelector('#registerForm button[type="submit"]');
+function showLoading(isLoading, formType = '') {
+    let button;
     
-    if (loginBtn) {
-        if (isLoading) {
-            loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...';
-            loginBtn.disabled = true;
-        } else {
-            loginBtn.innerHTML = 'Login';
-            loginBtn.disabled = false;
-        }
+    if (formType === 'login') {
+        button = document.querySelector('#loginForm button[type="submit"]');
+    } else if (formType === 'register') {
+        button = document.querySelector('#registerForm button[type="submit"]');
     }
     
-    if (registerBtn) {
+    if (button) {
         if (isLoading) {
-            registerBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating Account...';
-            registerBtn.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
+            button.disabled = true;
         } else {
-            registerBtn.innerHTML = 'Create Account';
-            registerBtn.disabled = false;
+            if (formType === 'login') {
+                button.innerHTML = 'Login';
+            } else {
+                button.innerHTML = 'Create Account';
+            }
+            button.disabled = false;
         }
     }
 }
 
-// Utility function to show alerts
-function showAlert(message, type) {
+// Show alert message
+function showAlert(message, type = 'info') {
     // Remove existing alerts
     const existingAlert = document.querySelector('.alert');
     if (existingAlert) {
@@ -417,15 +541,21 @@ function showAlert(message, type) {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
     alertDiv.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
-        ${message}
+        <div class="d-flex align-items-center">
+            <i class="fas ${getAlertIcon(type)} me-2"></i>
+            <div>${message}</div>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
     // Insert after forms
     const forms = document.querySelectorAll('form');
-    const lastForm = forms[forms.length - 1];
-    lastForm.parentNode.insertBefore(alertDiv, lastForm.nextSibling);
+    if (forms.length > 0) {
+        const lastForm = forms[forms.length - 1];
+        lastForm.parentNode.insertBefore(alertDiv, lastForm.nextSibling);
+    } else {
+        document.querySelector('.auth-card').appendChild(alertDiv);
+    }
     
     // Auto remove after 5 seconds
     setTimeout(() => {
@@ -435,34 +565,64 @@ function showAlert(message, type) {
     }, 5000);
 }
 
-// Logout function (can be used in other pages)
+// Get alert icon based on type
+function getAlertIcon(type) {
+    switch(type) {
+        case 'success': return 'fa-check-circle';
+        case 'danger': return 'fa-exclamation-circle';
+        case 'warning': return 'fa-exclamation-triangle';
+        case 'info': return 'fa-info-circle';
+        default: return 'fa-info-circle';
+    }
+}
+
+// Check if user is admin (for other pages)
+async function checkAdminStatus() {
+    const user = auth.currentUser;
+    if (!user) return false;
+    
+    try {
+        const snapshot = await database.ref('users/' + user.uid).once('value');
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            return userData.isAdmin || false;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+    }
+}
+
+// Logout function (for other pages)
 function logout() {
     auth.signOut().then(() => {
         localStorage.removeItem('currentUser');
+        currentUserData = null;
         window.location.href = 'login.html';
     }).catch(error => {
+        console.error('Logout error:', error);
         showAlert('Error logging out: ' + error.message, 'danger');
     });
 }
 
-// Check authentication on page load
-function checkAuth() {
-    auth.onAuthStateChanged(user => {
-        if (!user) {
-            window.location.href = 'login.html';
-        } else {
-            // User is logged in, check role if needed
-            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            
-            // If on admin page but not admin
-            if (window.location.pathname.includes('admin') && !userData.isAdmin) {
-                window.location.href = 'user-dashboard.html';
-            }
-            
-            // If on user page but is admin
-            if (window.location.pathname.includes('user-dashboard') && userData.isAdmin) {
-                window.location.href = 'admin-dashboard.html';
-            }
+// Export functions for use in other pages
+window.authFunctions = {
+    logout: logout,
+    checkAdminStatus: checkAdminStatus,
+    getCurrentUser: () => currentUserData,
+    updateAdminCode: async (newCode) => {
+        try {
+            await database.ref('config/adminConfig').update({
+                adminSecretCode: newCode,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP,
+                updatedBy: auth.currentUser?.uid || 'system'
+            });
+            adminSecretCode = newCode;
+            return true;
+        } catch (error) {
+            console.error('Error updating admin code:', error);
+            return false;
         }
-    });
-}
+    }
+};
