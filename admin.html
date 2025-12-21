@@ -753,7 +753,83 @@
             if(!user) {
                 window.location.href = 'login.html';
             }
+        });// admin.html এর script section এ যোগ করুন
+async function createNewAdmin() {
+    const name = document.getElementById('adminName').value;
+    const email = document.getElementById('adminEmail').value;
+    const ffid = document.getElementById('adminFFID').value;
+    const balance = document.getElementById('adminBalance').value;
+    const sendEmail = document.getElementById('sendEmailInvite').checked;
+    
+    if(!name || !email || !ffid) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    // Generate a temporary password
+    const tempPassword = generatePassword() + "123"; // Example: "ABC123"
+    
+    try {
+        // 1. Create user in Firebase Authentication
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, tempPassword);
+        const newAdmin = userCredential.user;
+        
+        // 2. Save admin data to Realtime Database
+        await firebase.database().ref('users/' + newAdmin.uid).set({
+            name: name,
+            email: email,
+            ffid: ffid,
+            balance: parseInt(balance) || 5000,
+            role: 'admin',
+            joinDate: new Date().toISOString(),
+            isActive: true,
+            createdAt: Date.now(),
+            createdBy: firebase.auth().currentUser.uid
         });
+        
+        // 3. Send password reset email (optional)
+        if(sendEmail) {
+            await firebase.auth().sendPasswordResetEmail(email);
+        }
+        
+        // Show success message with credentials
+        const message = `
+        ✅ Admin created successfully!
+        
+        Admin Details:
+        Name: ${name}
+        Email: ${email}
+        Temporary Password: ${tempPassword}
+        
+        ${sendEmail ? 'Password reset email sent!' : 'Please share the password manually.'}
+        
+        Instructions:
+        1. Go to: https://yourusername.github.io/free-fire-tournament/login.html
+        2. Login with email and temporary password
+        3. Change password immediately
+        `;
+        
+        alert(message);
+        
+        // Clear form
+        document.getElementById('adminName').value = '';
+        document.getElementById('adminEmail').value = '';
+        document.getElementById('adminFFID').value = '';
+        
+    } catch (error) {
+        alert('Error creating admin: ' + error.message);
+    }
+}
+
+// Helper function to generate password
+function generatePassword() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let password = '';
+    for(let i = 0; i < 6; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+}
     </script>
     <!-- admin.html এর মধ্যে কোথাও যোগ করুন -->
 <div class="card">
@@ -773,4 +849,5 @@
 </div>
 </body>
 </html>
+
 
