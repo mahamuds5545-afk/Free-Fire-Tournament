@@ -1,185 +1,548 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>User Dashboard - FF Tournament</title>
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
-            color: white;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .header {
-            background: rgba(26, 26, 46, 0.9);
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #ff6600;
-        }
-        .balance-card {
-            background: linear-gradient(135deg, #ff6600, #ff3300);
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: bold;
-        }
-        .dashboard {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        .stat-card {
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid rgba(255,102,0,0.3);
-        }
-        .btn {
-            background: #ff6600;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-            text-decoration: none;
-            display: inline-block;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h2><i class="fas fa-fire"></i> User Dashboard</h2>
-        <div>
-            <span id="userEmail">Loading...</span>
-            <button onclick="logout()" class="btn">Logout</button>
-        </div>
-    </div>
-    
-    <div class="dashboard">
-        <div class="balance-card">
-            <h3>Your Balance: <span id="userBalance">৳0</span></h3>
-        </div>
-        
-        <div class="stats">
-            <div class="stat-card">
-                <h4>Free Fire ID</h4>
-                <p id="userFFID">Loading...</p>
-            </div>
-            <div class="stat-card">
-                <h4>Total Kills</h4>
-                <p id="userKills">0</p>
-            </div>
-            <div class="stat-card">
-                <h4>Matches Played</h4>
-                <p id="userMatches">0</p>
-            </div>
-            <div class="stat-card">
-                <h4>Tournaments Won</h4>
-                <p id="userWins">0</p>
-            </div>
-        </div>
-        
-        <div style="margin-top: 30px;">
-            <a href="index.html" class="btn">← Back to Home</a>
-            <a href="#" onclick="rechargeBalance()" class="btn">➕ Add Balance</a>
-            <a href="#" onclick="joinTournament()" class="btn">🎮 Join Tournament</a>
-        </div>
-        
-        <div id="tournamentsList" style="margin-top: 30px;">
-            <h3>Available Tournaments</h3>
-            <div id="tournamentsContainer">
-                Loading tournaments...
-            </div>
-        </div>
-    </div>
-    
-    <!-- Font Awesome -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FF Tournament</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Firebase v9 Modular SDK -->
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/auth.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/user.css">
+</head>
+<body class="user-dashboard">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg user-navbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-fire text-ff"></i> FF Tournament
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <div class="balance-card me-3">
+                    <i class="fas fa-wallet"></i>
+                    <span id="userBalance">৳0</span>
+                </div>
+                
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i>
+                        <span class="profile-name"></span>
+                        <span class="badge bg-danger" id="notificationBadge" style="display: none;">0</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" data-section="profile">
+                            <i class="fas fa-user"></i> Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" data-section="my-tournaments">
+                            <i class="fas fa-gamepad"></i> My Tournaments
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" data-section="transactions">
+                            <i class="fas fa-history"></i> Transactions
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs user-nav mb-4">
+            <li class="nav-item">
+                <a class="nav-link active" data-section="dashboard">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-section="tournaments">
+                    <i class="fas fa-trophy"></i> Tournaments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-section="my-tournaments">
+                    <i class="fas fa-gamepad"></i> My Tournaments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-section="transactions">
+                    <i class="fas fa-history"></i> Transactions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-section="profile">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+            </li>
+        </ul>
+
+        <!-- Dashboard Section -->
+        <section id="dashboardSection" class="user-section">
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <button class="btn btn-ff w-100 h-100 py-3" data-bs-toggle="modal" data-bs-target="#rechargeModal">
+                        <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                        <h6>Add Balance</h6>
+                        <p class="small mb-0">Recharge your wallet</p>
+                    </button>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <button class="btn btn-success w-100 h-100 py-3" onclick="userManager.showSection('tournaments')">
+                        <i class="fas fa-gamepad fa-2x mb-2"></i>
+                        <h6>Join Tournament</h6>
+                        <p class="small mb-0">Compete & win prizes</p>
+                    </button>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <button class="btn btn-warning w-100 h-100 py-3" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                        <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                        <h6>Withdraw</h6>
+                        <p class="small mb-0">Withdraw your winnings</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Featured Tournaments -->
+            <h5 class="mb-3"><i class="fas fa-fire"></i> Featured Tournaments</h5>
+            <div class="row" id="featuredTournaments">
+                <!-- Dynamic content -->
+            </div>
+        </section>
+
+        <!-- All Tournaments Section -->
+        <section id="tournamentsSection" class="user-section d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4><i class="fas fa-trophy"></i> All Tournaments</h4>
+                <div class="input-group" style="width: 300px;">
+                    <input type="text" class="form-control" placeholder="Search tournaments...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row" id="allTournaments">
+                <!-- Dynamic content -->
+            </div>
+        </section>
+
+        <!-- My Tournaments Section -->
+        <section id="myTournamentsSection" class="user-section d-none">
+            <h4 class="mb-4"><i class="fas fa-gamepad"></i> My Tournaments</h4>
+            
+            <div class="row" id="myTournaments">
+                <!-- Dynamic content -->
+            </div>
+        </section>
+
+        <!-- Transactions Section -->
+        <section id="transactionsSection" class="user-section d-none">
+            <h4 class="mb-4"><i class="fas fa-history"></i> Transaction History</h4>
+            
+            <div class="user-card">
+                <div class="table-responsive">
+                    <table class="table table-dark">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsList">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profileSection" class="user-section d-none">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="user-card text-center">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Avatar" class="profile-avatar">
+                        <h5 class="profile-name"></h5>
+                        <p class="small text-muted">FF ID: <span class="profile-ffid"></span></p>
+                        
+                        <div class="stats-grid mt-3">
+                            <div class="stat-box">
+                                <div class="value" id="profileKills">0</div>
+                                <div class="label">Kills</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="value" id="profileWins">0</div>
+                                <div class="label">Wins</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="value" id="profileMatches">0</div>
+                                <div class="label">Matches</div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-ff btn-sm w-100 mt-3" data-bs-toggle="modal" data-bs-target="#updateProfileModal">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-md-8">
+                    <div class="user-card">
+                        <h5><i class="fas fa-info-circle"></i> Account Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td id="profileName"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td id="profileEmail"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Free Fire ID:</strong></td>
+                                <td id="profileFFID"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Phone:</strong></td>
+                                <td id="profilePhone"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Join Date:</strong></td>
+                                <td id="profileJoinDate"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="user-card mt-3">
+                        <h5><i class="fas fa-shield-alt"></i> Security</h5>
+                        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Floating Withdraw Button -->
+    <button class="btn btn-success withdraw-btn" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+        <i class="fas fa-money-bill-wave"></i> Withdraw
+    </button>
+
+    <!-- Modals -->
+    <!-- Recharge Modal -->
+    <div class="modal fade" id="rechargeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-wallet"></i> Recharge Balance</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="rechargeForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Amount (৳)</label>
+                            <input type="number" class="form-control" name="amount" min="100" value="500" required>
+                            <small class="text-muted">Minimum: ৳100</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" name="method" required>
+                                <option value="">Select Method</option>
+                                <option value="bkash">bKash</option>
+                                <option value="nagad">Nagad</option>
+                                <option value="rocket">Rocket (DBBL)</option>
+                                <option value="upay">Upay</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Transaction ID</label>
+                            <input type="text" class="form-control" name="transactionId" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Your Sending Number</label>
+                            <input type="text" class="form-control" name="senderNumber" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-ff">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal fade" id="withdrawModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-money-bill-wave"></i> Withdraw Balance</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="withdrawForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Amount (৳)</label>
+                            <input type="number" class="form-control" name="amount" min="200" required>
+                            <small class="text-muted">Minimum withdrawal: ৳200</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" name="method" required>
+                                <option value="bkash">bKash</option>
+                                <option value="nagad">Nagad</option>
+                                <option value="rocket">Rocket (DBBL)</option>
+                                <option value="upay">Upay</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Account Number</label>
+                            <input type="text" class="form-control" name="accountNumber" required>
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            Withdrawals are processed manually within 24 hours.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Tournament Modal -->
+    <div class="modal fade" id="joinTournamentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTournamentTitle">Join Tournament</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <p class="small mb-1"><strong>Entry Fee:</strong></p>
+                            <p class="h5 text-ff" id="modalEntryFee">৳0</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="small mb-1"><strong>Prize Pool:</strong></p>
+                            <p class="h5 text-success" id="modalPrizePool">৳0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <p class="small mb-1"><strong>Kill Reward:</strong></p>
+                            <p class="text-danger" id="modalKillReward">৳0/kill</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="small mb-1"><strong>Players:</strong></p>
+                            <p id="modalJoinedPlayers">0</p>
+                        </div>
+                    </div>
+                    
+                    <p class="small mb-1"><strong>Schedule:</strong></p>
+                    <p id="modalSchedule">-</p>
+                    
+                    <!-- Duo Fields -->
+                    <div id="duoFields" class="d-none">
+                        <hr>
+                        <h6>Choose Play Mode:</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="playMode" id="playModeSolo" value="solo" checked>
+                            <label class="form-check-label" for="playModeSolo">
+                                Solo (Play alone)
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="playMode" id="playModeDuo" value="duo">
+                            <label class="form-check-label" for="playModeDuo">
+                                Duo (Play with partner)
+                            </label>
+                        </div>
+                        
+                        <div id="partnerFields" style="display: none;">
+                            <div class="player-input-group">
+                                <div class="player-label">Partner Name</div>
+                                <input type="text" class="form-control" id="partnerName" placeholder="Enter partner name">
+                            </div>
+                            <div class="player-input-group">
+                                <div class="player-label">Partner Free Fire ID</div>
+                                <input type="text" class="form-control" id="partnerFFID" placeholder="Enter partner FF ID">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-ff w-100 mt-3" id="joinTournamentBtn">
+                        Confirm Join
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Details Modal -->
+    <div class="modal fade" id="roomDetailsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tournamentTitle">Room Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="room-details">
+                        <h5><i class="fas fa-door-open"></i> Room Details</h5>
+                        <div class="room-id" id="roomId">-</div>
+                        <div class="room-password" id="roomPassword">-</div>
+                        <button class="btn btn-success mt-3" onclick="copyToClipboard(document.getElementById('roomId').textContent + '\\nPassword: ' + document.getElementById('roomPassword').textContent)">
+                            <i class="fas fa-copy"></i> Copy Details
+                        </button>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle"></i> Instructions</h6>
+                        <p class="small mb-1">1. Open Free Fire and go to Custom Room</p>
+                        <p class="small mb-1">2. Enter the Room ID and Password above</p>
+                        <p class="small mb-1">3. Join the room immediately</p>
+                        <p class="small mb-1">4. Tournament is LIVE now!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Profile Modal -->
+    <div class="modal fade" id="updateProfileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-edit"></i> Update Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="updateProfileForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Free Fire ID</label>
+                            <input type="text" class="form-control" name="ffid" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" name="phone">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-ff">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-key"></i> Change Password</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="changePasswordForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" name="currentPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" name="newPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" name="confirmPassword" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-ff">Change Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Joined Tournament Modal -->
+    <div class="modal fade" id="joinedTournamentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="joinedTournamentTitle">Tournament Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-success">
+                        <p class="mb-0"><i class="fas fa-check-circle"></i> You have joined this tournament!</p>
+                    </div>
+                    
+                    <p class="mb-1"><strong>Status:</strong> <span class="badge bg-info" id="joinedTournamentStatus">-</span></p>
+                    <p class="mb-1"><strong>Entry Fee Paid:</strong> <span class="text-success" id="joinedEntryPaid">৳0</span></p>
+                    <p class="mb-3"><strong>Play Mode:</strong> <span id="joinedPlayMode">-</span></p>
+                    
+                    <button class="btn btn-success w-100" id="roomDetailsBtn" style="display: none;">
+                        <i class="fas fa-door-open"></i> View Room Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/user.js"></script>
     
     <script>
-        // Load user data when page loads
-        document.addEventListener('DOMContentLoaded', async function() {
-            const userData = await getCurrentUserData();
+        // Show duo fields when duo mode is selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const duoRadio = document.getElementById('playModeDuo');
+            const soloRadio = document.getElementById('playModeSolo');
+            const partnerFields = document.getElementById('partnerFields');
             
-            if(!userData) {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            // Update user info
-            document.getElementById('userEmail').textContent = userData.email || 'User';
-            document.getElementById('userBalance').textContent = '৳' + (userData.balance || 0);
-            document.getElementById('userFFID').textContent = userData.ffid || 'Not Set';
-            document.getElementById('userKills').textContent = userData.kills || 0;
-            document.getElementById('userMatches').textContent = userData.matches || 0;
-            document.getElementById('userWins').textContent = userData.wins || 0;
-            
-            // Load tournaments
-            loadTournaments();
-        });
-        
-        // Load tournaments from database
-        async function loadTournaments() {
-            try {
-                const tournamentsRef = ref(database, 'tournaments');
-                const snapshot = await get(tournamentsRef);
+            if (duoRadio && soloRadio && partnerFields) {
+                duoRadio.addEventListener('change', function() {
+                    if (this.checked) {
+                        partnerFields.style.display = 'block';
+                    }
+                });
                 
-                if(snapshot.exists()) {
-                    const tournaments = snapshot.val();
-                    let html = '<div class="stats">';
-                    
-                    Object.keys(tournaments).forEach(key => {
-                        const t = tournaments[key];
-                        html += `
-                            <div class="stat-card">
-                                <h4>${t.title || 'Tournament'}</h4>
-                                <p>Entry: ৳${t.entryFee || 0}</p>
-                                <p>Prize: ৳${t.prize || 0}</p>
-                                <button onclick="joinTournament('${key}')" class="btn">Join</button>
-                            </div>
-                        `;
-                    });
-                    
-                    html += '</div>';
-                    document.getElementById('tournamentsContainer').innerHTML = html;
-                } else {
-                    document.getElementById('tournamentsContainer').innerHTML = 
-                        '<p>No tournaments available. Check back later!</p>';
-                }
-            } catch (error) {
-                console.error('Error loading tournaments:', error);
-                document.getElementById('tournamentsContainer').innerHTML = 
-                    '<p>Error loading tournaments. Please refresh.</p>';
+                soloRadio.addEventListener('change', function() {
+                    if (this.checked) {
+                        partnerFields.style.display = 'none';
+                    }
+                });
             }
-        }
-        
-        // Join tournament function
-        function joinTournament(tournamentId) {
-            alert('Joining tournament: ' + tournamentId);
-            // Add your join tournament logic here
-        }
-        
-        // Recharge balance
-        function rechargeBalance() {
-            const amount = prompt('Enter amount to recharge (৳):');
-            if(amount && !isNaN(amount)) {
-                alert('Redirecting to payment gateway for ৳' + amount);
-                // Add payment gateway integration here
-            }
-        }
+        });
     </script>
 </body>
 </html>
