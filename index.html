@@ -1,543 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Free Fire Tournament - Home</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Font Awesome -->
+    <title>Free Fire Tournament - Compete & Win</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
-            color: white;
-            min-height: 100vh;
-        }
-        
-        .header {
-            background: rgba(26, 26, 46, 0.9);
-            padding: 20px;
-            text-align: center;
-            border-bottom: 3px solid #ff6600;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-        
-        .header h1 {
-            color: #ff6600;
-            font-size: 2.8rem;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-        }
-        
-        .header p {
-            color: #ddd;
-            font-size: 1.1rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .main-container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 20px;
-        }
-        
-        .auth-status-box {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 30px;
-            text-align: center;
-            border: 1px solid rgba(255, 102, 0, 0.3);
-            backdrop-filter: blur(10px);
-        }
-        
-        .auth-status-box h3 {
-            color: #ff6600;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-        }
-        
-        #authStatus {
-            font-size: 1.2rem;
-            margin: 20px 0;
-            padding: 15px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .user-info {
-            background: linear-gradient(135deg, rgba(255, 102, 0, 0.2), rgba(255, 153, 0, 0.1));
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 15px;
-            display: none;
-        }
-        
-        .user-info.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-        
-        .user-info h4 {
-            color: #ffcc00;
-            margin-bottom: 10px;
-        }
-        
-        .user-info p {
-            margin: 8px 0;
-            color: #ddd;
-        }
-        
-        .action-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 40px 0;
-        }
-        
-        .action-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
-            cursor: pointer;
-            text-decoration: none;
-            color: white;
-            display: block;
-            backdrop-filter: blur(10px);
-        }
-        
-        .action-card:hover {
-            transform: translateY(-5px);
-            border-color: #ff6600;
-            box-shadow: 0 10px 20px rgba(255, 102, 0, 0.2);
-            background: rgba(255, 102, 0, 0.1);
-        }
-        
-        .action-card i {
-            font-size: 3rem;
-            color: #ff6600;
-            margin-bottom: 20px;
-        }
-        
-        .action-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-        
-        .action-card p {
-            color: #bbb;
-            font-size: 0.9rem;
-        }
-        
-        .admin-card {
-            border: 2px solid #e74c3c;
-        }
-        
-        .admin-card i {
-            color: #e74c3c;
-        }
-        
-        .user-card {
-            border: 2px solid #3498db;
-        }
-        
-        .user-card i {
-            color: #3498db;
-        }
-        
-        .login-card {
-            border: 2px solid #2ecc71;
-        }
-        
-        .login-card i {
-            color: #2ecc71;
-        }
-        
-        .tournament-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 40px 0;
-        }
-        
-        .stat-box {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .stat-box h3 {
-            color: #ffcc00;
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        
-        .stat-box p {
-            color: #bbb;
-            font-size: 0.9rem;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 30px;
-            margin-top: 50px;
-            background: rgba(0, 0, 0, 0.3);
-            border-top: 1px solid rgba(255, 102, 0, 0.3);
-        }
-        
-        .footer p {
-            color: #aaa;
-            margin: 10px 0;
-        }
-        
-        .btn {
-            display: inline-block;
-            background: #ff6600;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            margin: 10px;
-            transition: background 0.3s;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .btn:hover {
-            background: #ff8533;
-        }
-        
-        .btn-admin {
-            background: #e74c3c;
-        }
-        
-        .btn-admin:hover {
-            background: #ff6b6b;
-        }
-        
-        .btn-user {
-            background: #3498db;
-        }
-        
-        .btn-user:hover {
-            background: #5dade2;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #ff6600;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .logout-btn {
-            background: #e74c3c;
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            color: white;
-            cursor: pointer;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .action-buttons {
-                grid-template-columns: 1fr;
-            }
-            
-            .main-container {
-                padding: 10px;
-            }
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="header">
-        <h1><i class="fas fa-fire"></i> FREE FIRE TOURNAMENT</h1>
-        <p>Join exciting Free Fire tournaments, win amazing prizes, and showcase your skills!</p>
-    </div>
-    
-    <div class="main-container">
-        <!-- Authentication Status -->
-        <div class="auth-status-box">
-            <h3><i class="fas fa-user-circle"></i> Account Status</h3>
-            <div id="authStatus">
-                <span class="loading-spinner"></span> Checking authentication...
-            </div>
-            
-            <div id="userInfo" class="user-info">
-                <!-- User info will be loaded here -->
-            </div>
-            
-            <div id="actionButtons" style="display: none;">
-                <!-- Dynamic action buttons -->
-            </div>
-        </div>
-        
-        <!-- Quick Stats -->
-        <div class="tournament-stats">
-            <div class="stat-box">
-                <h3 id="liveTournaments">0</h3>
-                <p><i class="fas fa-broadcast-tower"></i> Live Tournaments</p>
-            </div>
-            <div class="stat-box">
-                <h3 id="totalPlayers">0</h3>
-                <p><i class="fas fa-users"></i> Total Players</p>
-            </div>
-            <div class="stat-box">
-                <h3 id="totalPrizes">৳0</h3>
-                <p><i class="fas fa-trophy"></i> Total Prizes</p>
-            </div>
-            <div class="stat-box">
-                <h3 id="upcomingTournaments">0</h3>
-                <p><i class="fas fa-calendar-alt"></i> Upcoming</p>
-            </div>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <a href="login.html" class="action-card login-card">
-                <i class="fas fa-sign-in-alt"></i>
-                <h3>Login / Register</h3>
-                <p>Login to your account or create a new one to join tournaments</p>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark ff-navbar">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-fire"></i> FF Tournament
             </a>
-            
-            <a href="user.html" class="action-card user-card">
-                <i class="fas fa-user"></i>
-                <h3>Player Dashboard</h3>
-                <p>View tournaments, join matches, check balance & manage account</p>
-            </a>
-            
-            <a href="admin-login.html" class="action-card admin-card">
-                <i class="fas fa-user-shield"></i>
-                <h3>Admin Panel</h3>
-                <p>Admin login to manage tournaments, users & payments</p>
-            </a>
-        </div>
-        
-        <!-- Quick Links -->
-        <div style="text-align: center; margin: 40px 0;">
-            <h3 style="color: #ffcc00; margin-bottom: 20px;">
-                <i class="fas fa-rocket"></i> Quick Start
-            </h3>
-            
-            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
-                <a href="register.html" class="btn" style="background: #2ecc71;">
-                    <i class="fas fa-user-plus"></i> New Registration
-                </a>
-                <a href="tournaments.html" class="btn" style="background: #9b59b6;">
-                    <i class="fas fa-trophy"></i> View Tournaments
-                </a>
-                <a href="how-to-play.html" class="btn" style="background: #3498db;">
-                    <i class="fas fa-question-circle"></i> How to Play
-                </a>
-                <a href="rules.html" class="btn" style="background: #e67e22;">
-                    <i class="fas fa-gavel"></i> Rules
-                </a>
+            <div class="d-flex">
+                <a href="login.html" class="btn btn-outline-light me-2">Login</a>
+                <a href="login.html?register=true" class="btn btn-ff">Register</a>
             </div>
         </div>
-    </div>
-    
-    <div class="footer">
-        <p><i class="fas fa-copyright"></i> 2024 Free Fire Tournament Platform. All rights reserved.</p>
-        <p>This is a gaming platform for Free Fire enthusiasts. Not affiliated with Garena.</p>
-        <p style="color: #777; font-size: 0.9rem; margin-top: 20px;">
-            <a href="privacy.html" style="color: #aaa; margin: 0 10px;">Privacy Policy</a> | 
-            <a href="terms.html" style="color: #aaa; margin: 0 10px;">Terms of Service</a> | 
-            <a href="contact.html" style="color: #aaa; margin: 0 10px;">Contact Us</a>
-        </p>
-    </div>
-    
-    <!-- Firebase SDK (compatibility version) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold">Win Big in <span class="text-ff">Free Fire</span> Tournaments</h1>
+                    <p class="lead mb-4">Join exciting custom room tournaments, showcase your skills, and win real cash prizes!</p>
+                    <div class="d-flex gap-3">
+                        <a href="login.html" class="btn btn-ff btn-lg">Join Now</a>
+                        <a href="#features" class="btn btn-outline-light btn-lg">Learn More</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3612/3612517.png" alt="Free Fire" class="img-fluid hero-img">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="features-section py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Why Choose Our Platform?</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h4>Cash Prizes</h4>
+                        <p>Win real money in every tournament. Instant withdrawal to your mobile banking.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4>Secure Platform</h4>
+                        <p>Safe and secure transactions with 100% fair gameplay. Verified payments.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h4>Kill Rewards</h4>
+                        <p>Get cashback for every kill. Even if you don't win, earn from your kills!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tournaments Preview -->
+    <section class="tournaments-section py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Live & Upcoming Tournaments</h2>
+            <div id="tournamentsPreview" class="row">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="ff-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-fire"></i> FF Tournament</h5>
+                    <p>Premium Free Fire Tournament Platform</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h5>Contact</h5>
+                    <p><i class="fas fa-envelope"></i> support@fftournament.com</p>
+                    <p><i class="fas fa-phone"></i> +880 1234 567890</p>
+                </div>
+            </div>
+            <hr>
+            <p class="text-center mb-0">&copy; 2023 FF Tournament. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/common.js"></script>
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyA9HKKBo6KozIskG2oEF0PO7UCCScIxXdQ",
-            authDomain: "freefiregame-85e60.firebaseapp.com",
-            databaseURL: "https://freefiregame-85e60-default-rtdb.firebaseio.com",
-            projectId: "freefiregame-85e60",
-            storageBucket: "freefiregame-85e60.firebasestorage.app",
-            messagingSenderId: "961424698248",
-            appId: "1:961424698248:web:32e3d79f1bdfefaa9b283d",
-            measurementId: "G-7D31XM1SBC"
-        };
-        
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-        
-        // Load tournament stats
-        async function loadTournamentStats() {
-            try {
-                const snapshot = await database.ref('tournaments').once('value');
-                if(snapshot.exists()) {
-                    const tournaments = snapshot.val();
-                    let liveCount = 0;
-                    let upcomingCount = 0;
-                    let totalPrizes = 0;
-                    
-                    Object.values(tournaments).forEach(tournament => {
-                        if(tournament.status === 'live') liveCount++;
-                        if(tournament.status === 'upcoming') upcomingCount++;
-                        totalPrizes += tournament.prize || 0;
-                    });
-                    
-                    document.getElementById('liveTournaments').textContent = liveCount;
-                    document.getElementById('upcomingTournaments').textContent = upcomingCount;
-                    document.getElementById('totalPrizes').textContent = '৳' + totalPrizes;
-                }
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
-        
-        // Load total players
-        async function loadTotalPlayers() {
-            try {
-                const snapshot = await database.ref('users').once('value');
-                if(snapshot.exists()) {
-                    const users = snapshot.val();
-                    const totalPlayers = Object.keys(users).length;
-                    document.getElementById('totalPlayers').textContent = totalPlayers;
-                }
-            } catch (error) {
-                console.error('Error loading users count:', error);
-            }
-        }
-        
-        // Check authentication status
-        auth.onAuthStateChanged(async (user) => {
-            const authStatus = document.getElementById('authStatus');
-            const userInfo = document.getElementById('userInfo');
-            const actionButtons = document.getElementById('actionButtons');
-            
-            if (user) {
-                // User is signed in
-                try {
-                    const userRef = database.ref('users/' + user.uid);
-                    const snapshot = await userRef.once('value');
-                    
-                    if(snapshot.exists()) {
-                        const userData = snapshot.val();
-                        
-                        // Display user info
-                        authStatus.innerHTML = `<span style="color: #2ecc71;">
-                            <i class="fas fa-check-circle"></i> Logged in as: ${user.email}
-                        </span>`;
-                        
-                        userInfo.innerHTML = `
-                            <h4><i class="fas fa-user"></i> Account Details</h4>
-                            <p><strong>Name:</strong> ${userData.name || 'Not set'}</p>
-                            <p><strong>Free Fire ID:</strong> ${userData.ffid || 'Not set'}</p>
-                            <p><strong>Balance:</strong> ৳${userData.balance || 0}</p>
-                            <p><strong>Role:</strong> <span style="color: ${userData.role === 'admin' ? '#e74c3c' : '#3498db'}">${userData.role || 'user'}</span></p>
-                            <button onclick="logout()" class="logout-btn">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </button>
+        // Load featured tournaments
+        database.ref('tournaments').limitToLast(3).once('value')
+            .then(snapshot => {
+                const container = document.getElementById('tournamentsPreview');
+                if (snapshot.exists()) {
+                    let html = '';
+                    snapshot.forEach(child => {
+                        const tournament = child.val();
+                        html += `
+                            <div class="col-md-4 mb-4">
+                                <div class="tournament-card">
+                                    <span class="tournament-status ${tournament.status}">${tournament.status}</span>
+                                    <h5>${tournament.title}</h5>
+                                    <p><i class="fas fa-calendar"></i> ${new Date(tournament.schedule).toLocaleDateString()}</p>
+                                    <div class="tournament-info">
+                                        <span><i class="fas fa-trophy"></i> ৳${tournament.prize}</span>
+                                        <span><i class="fas fa-ticket-alt"></i> ৳${tournament.entryFee}</span>
+                                    </div>
+                                    <a href="login.html" class="btn btn-ff btn-sm w-100 mt-2">Join Now</a>
+                                </div>
+                            </div>
                         `;
-                        userInfo.classList.add('active');
-                        
-                        // Show appropriate action buttons
-                        actionButtons.style.display = 'block';
-                        if(userData.role === 'admin') {
-                            actionButtons.innerHTML = `
-                                <a href="admin.html" class="btn btn-admin">
-                                    <i class="fas fa-user-shield"></i> Go to Admin Panel
-                                </a>
-                                <a href="user.html" class="btn btn-user">
-                                    <i class="fas fa-gamepad"></i> Player Dashboard
-                                </a>
-                            `;
-                        } else {
-                            actionButtons.innerHTML = `
-                                <a href="user.html" class="btn btn-user">
-                                    <i class="fas fa-gamepad"></i> Go to Dashboard
-                                </a>
-                                <a href="tournaments.html" class="btn" style="background: #9b59b6;">
-                                    <i class="fas fa-trophy"></i> Join Tournament
-                                </a>
-                            `;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error loading user data:', error);
-                    authStatus.innerHTML = `<span style="color: #e74c3c;">
-                        <i class="fas fa-exclamation-circle"></i> Error loading user data
-                    </span>`;
+                    });
+                    container.innerHTML = html;
                 }
-            } else {
-                // User is signed out
-                authStatus.innerHTML = `<span style="color: #f39c12;">
-                    <i class="fas fa-user"></i> You are not logged in
-                </span>`;
-                userInfo.classList.remove('active');
-                actionButtons.style.display = 'none';
-            }
-            
-            // Load stats
-            loadTournamentStats();
-            loadTotalPlayers();
-        });
-        
-        // Logout function
-        function logout() {
-            if(confirm('Are you sure you want to logout?')) {
-                auth.signOut().then(() => {
-                    window.location.reload();
-                }).catch((error) => {
-                    alert('Logout failed: ' + error.message);
-                });
-            }
-        }
-        
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Home page loaded');
-            
-            // Check if user is logged in
-            const user = auth.currentUser;
-            if(user) {
-                console.log('User already logged in:', user.email);
-            }
-        });
+            });
     </script>
 </body>
 </html>
