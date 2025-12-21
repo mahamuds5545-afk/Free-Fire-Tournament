@@ -165,9 +165,9 @@ function checkAuthState() {
                 console.log("🔄 Redirecting to dashboard...");
                 setTimeout(() => {
                     if (userData.isAdmin) {
-                        window.location.href = 'admin-dashboard.html';
+                        window.location.href = 'admin.html';
                     } else {
-                        window.location.href = 'user-dashboard.html';
+                        window.location.href = 'user.html';
                     }
                 }, 1000);
             }
@@ -383,9 +383,9 @@ async function performRegistration(name, email, password, ffid, isAdmin) {
         // Redirect after delay
         setTimeout(() => {
             if (isAdmin) {
-                window.location.href = 'admin-dashboard.html';
+                window.location.href = 'admin.html';
             } else {
-                window.location.href = 'user-dashboard.html';
+                window.location.href = 'user.html';
             }
         }, 2000);
         
@@ -517,3 +517,4 @@ function getAlertIcon(type) {
 
 // Global function for password reset
 window.resetPassword = resetPassword;
+
