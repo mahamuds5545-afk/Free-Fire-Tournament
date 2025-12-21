@@ -755,5 +755,22 @@
             }
         });
     </script>
+    <!-- admin.html এর মধ্যে কোথাও যোগ করুন -->
+<div class="card">
+    <h3>➕ Add New Admin</h3>
+    <input type="text" id="adminName" placeholder="Admin Full Name">
+    <input type="email" id="adminEmail" placeholder="Admin Email">
+    <input type="text" id="adminFFID" placeholder="Free Fire ID">
+    <input type="number" id="adminBalance" placeholder="Initial Balance" value="5000">
+    
+    <div style="margin: 10px 0;">
+        <label>
+            <input type="checkbox" id="sendEmailInvite"> Send email invitation
+        </label>
+    </div>
+    
+    <button onclick="createNewAdmin()" class="btn btn-success">Create Admin Account</button>
+</div>
 </body>
 </html>
+
