@@ -1,55 +1,20 @@
 // Global variables
-let adminSecretCode = "ADMIN12345"; // Default code
-let currentUserData = null;
+let adminSecretCode = "ADMIN12345";
+let currentUser = null;
 
-// Fetch admin config from Realtime Database
-async function fetchAdminConfig() {
-    try {
-        console.log("🔄 Fetching admin config from Realtime DB...");
-        
-        // Using promise-based approach
-        const snapshot = await database.ref('config/adminConfig').once('value');
-        
-        if (snapshot.exists()) {
-            const config = snapshot.val();
-            adminSecretCode = config.adminSecretCode || "ADMIN12345";
-            console.log("✅ Admin config loaded:", adminSecretCode);
-            return true;
-        } else {
-            // Create default config
-            console.log("📝 Creating default admin config...");
-            adminSecretCode = "ADMIN12345";
-            await database.ref('config/adminConfig').set({
-                adminSecretCode: adminSecretCode,
-                createdAt: firebase.database.ServerValue.TIMESTAMP,
-                createdBy: "system",
-                note: "Default admin code. Change in admin panel."
-            });
-            console.log("✅ Default admin config created");
-            return true;
-        }
-    } catch (error) {
-        console.error("❌ Error loading admin config:", error);
-        // Use default code
-        adminSecretCode = "ADMIN12345";
-        showAlert("Note: Using default admin code", "info");
-        return false;
-    }
-}
-
-// Initialize page
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("🚀 Initializing authentication system...");
+    console.log("🚀 Authentication system initializing...");
     
     try {
         // Load admin config
-        await fetchAdminConfig();
+        await loadAdminConfig();
         
-        // Initialize UI components
-        initializeUI();
+        // Setup event listeners
+        setupEventListeners();
         
         // Check if user is already logged in
-        checkExistingAuth();
+        checkAuthState();
         
     } catch (error) {
         console.error("❌ Initialization error:", error);
@@ -57,10 +22,34 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-// Initialize UI components
-function initializeUI() {
+// Load admin configuration from Realtime Database
+async function loadAdminConfig() {
+    try {
+        const snapshot = await database.ref('config/adminConfig').once('value');
+        
+        if (snapshot.exists()) {
+            const config = snapshot.val();
+            adminSecretCode = config.adminSecretCode || "ADMIN12345";
+            console.log("✅ Admin config loaded:", adminSecretCode);
+        } else {
+            // Create default config
+            await database.ref('config/adminConfig').set({
+                adminSecretCode: adminSecretCode,
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                createdBy: "system"
+            });
+            console.log("📝 Default admin config created");
+        }
+    } catch (error) {
+        console.error("❌ Error loading admin config:", error);
+        adminSecretCode = "ADMIN12345";
+    }
+}
+
+// Setup all event listeners
+function setupEventListeners() {
     // Tab switching
-    const tabButtons = document.querySelectorAll('#authTab button[data-bs-target]');
+    const tabButtons = document.querySelectorAll('#authTab button');
     tabButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -68,15 +57,16 @@ function initializeUI() {
         });
     });
     
-    // Form submissions
+    // Login form
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
-        loginForm.addEventListener('submit', handleLoginSubmit);
+        loginForm.addEventListener('submit', handleLogin);
     }
     
+    // Register form
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
-        registerForm.addEventListener('submit', handleRegisterSubmit);
+        registerForm.addEventListener('submit', handleRegister);
     }
     
     // Admin toggle for registration
@@ -89,7 +79,7 @@ function initializeUI() {
         toggleAdminFields(false);
     }
     
-    // Forgot password link
+    // Forgot password
     const forgotPasswordLink = document.querySelector('a[onclick*="resetPassword"]');
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', function(e) {
@@ -99,7 +89,7 @@ function initializeUI() {
     }
 }
 
-// Switch between login/register tabs
+// Switch between tabs
 function switchTab(targetId) {
     // Remove active classes
     document.querySelectorAll('#authTab .nav-link').forEach(link => {
@@ -119,7 +109,7 @@ function switchTab(targetId) {
     }
 }
 
-// Toggle admin fields visibility
+// Toggle admin fields
 function toggleAdminFields(isAdmin) {
     const adminField = document.querySelector('.admin-field');
     const userField = document.querySelector('.user-field');
@@ -135,62 +125,152 @@ function toggleAdminFields(isAdmin) {
     }
 }
 
-// Check existing authentication
-function checkExistingAuth() {
+// Check authentication state
+function checkAuthState() {
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             console.log("👤 User already logged in:", user.email);
+            currentUser = user;
             
-            // Get user data from Realtime DB
+            // Get user data from database
             const userSnapshot = await database.ref('users/' + user.uid).once('value');
+            let userData = userSnapshot.val();
             
-            if (userSnapshot.exists()) {
-                const userData = userSnapshot.val();
-                currentUserData = userData;
-                
-                // Store in localStorage
-                localStorage.setItem('currentUser', JSON.stringify({
-                    uid: user.uid,
+            if (!userData) {
+                // Create user data if not exists
+                userData = {
+                    name: user.email.split('@')[0],
                     email: user.email,
-                    name: userData.name || user.email.split('@')[0],
-                    isAdmin: userData.isAdmin || false,
-                    ffid: userData.ffid || '',
-                    status: userData.status || 'active'
-                }));
-                
-                // Redirect based on role
-                if (window.location.pathname.includes('login.html') || 
-                    window.location.pathname.includes('register.html')) {
-                    setTimeout(() => {
-                        if (userData.isAdmin) {
-                            window.location.href = 'admin-dashboard.html';
-                        } else {
-                            window.location.href = 'user-dashboard.html';
-                        }
-                    }, 1000);
-                }
+                    isAdmin: false,
+                    ffid: '',
+                    status: 'active',
+                    emailVerified: user.emailVerified,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                };
+                await database.ref('users/' + user.uid).set(userData);
             }
+            
+            // Store in localStorage
+            localStorage.setItem('currentUser', JSON.stringify({
+                uid: user.uid,
+                email: user.email,
+                name: userData.name,
+                isAdmin: userData.isAdmin || false,
+                ffid: userData.ffid || ''
+            }));
+            
+            // Auto-redirect if on login/register page
+            if (window.location.pathname.includes('login.html') || 
+                window.location.pathname.includes('register.html')) {
+                console.log("🔄 Redirecting to dashboard...");
+                setTimeout(() => {
+                    if (userData.isAdmin) {
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
+                        window.location.href = 'user-dashboard.html';
+                    }
+                }, 1000);
+            }
+        } else {
+            console.log("❌ No user logged in");
+            currentUser = null;
         }
     });
 }
 
-// Handle login form submission
-async function handleLoginSubmit(e) {
+// Handle login
+async function handleLogin(e) {
     e.preventDefault();
     
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     const isAdmin = document.getElementById('adminToggleLogin')?.checked || false;
     
-    if (!validateLoginForm(email, password)) {
+    if (!email || !password) {
+        showAlert('Please enter email and password', 'danger');
         return;
     }
     
-    await loginUser(email, password, isAdmin);
+    await performLogin(email, password, isAdmin);
 }
 
-// Handle register form submission
-async function handleRegisterSubmit(e) {
+// Perform login with Firebase
+async function performLogin(email, password, isAdmin) {
+    showLoading(true, 'login');
+    
+    try {
+        console.log("🔐 Attempting login...");
+        
+        // Sign in with Firebase Auth
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        console.log("✅ Firebase Auth successful");
+        
+        // Get or create user data in Realtime Database
+        const userRef = database.ref('users/' + user.uid);
+        const snapshot = await userRef.once('value');
+        
+        let userData;
+        if (snapshot.exists()) {
+            userData = snapshot.val();
+            console.log("📊 User data found:", userData);
+        } else {
+            userData = {
+                name: user.email.split('@')[0],
+                email: user.email,
+                isAdmin: false,
+                ffid: '',
+                status: 'active',
+                emailVerified: user.emailVerified,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+            await userRef.set(userData);
+            console.log("📝 Created new user entry");
+        }
+        
+        // Admin validation
+        if (isAdmin && !userData.isAdmin) {
+            throw new Error('This account is not an administrator');
+        }
+        
+        // Update last login
+        await userRef.update({
+            lastLogin: firebase.database.ServerValue.TIMESTAMP,
+            emailVerified: user.emailVerified
+        });
+        
+        // Store in localStorage
+        localStorage.setItem('currentUser', JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            name: userData.name,
+            isAdmin: userData.isAdmin,
+            ffid: userData.ffid || ''
+        }));
+        
+        // Show success message
+        showAlert(`Welcome back, ${userData.name}! Redirecting...`, 'success');
+        
+        // Redirect to appropriate dashboard
+        setTimeout(() => {
+            if (userData.isAdmin) {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                window.location.href = 'user-dashboard.html';
+            }
+        }, 1500);
+        
+    } catch (error) {
+        console.error('❌ Login error:', error);
+        handleAuthError(error);
+    } finally {
+        showLoading(false, 'login');
+    }
+}
+
+// Handle registration
+async function handleRegister(e) {
     e.preventDefault();
     
     const name = document.getElementById('registerName').value.trim();
@@ -201,183 +281,60 @@ async function handleRegisterSubmit(e) {
     const adminCode = document.getElementById('adminCode')?.value || '';
     const terms = document.getElementById('terms');
     
-    if (!validateRegisterForm(name, email, password, ffid, isAdmin, adminCode, terms)) {
-        return;
-    }
-    
-    await registerUser(name, email, password, ffid, isAdmin, adminCode);
-}
-
-// Validate login form
-function validateLoginForm(email, password) {
-    if (!email || !password) {
-        showAlert('Please enter both email and password', 'danger');
-        return false;
-    }
-    
-    if (!validateEmail(email)) {
-        showAlert('Please enter a valid email address', 'danger');
-        return false;
-    }
-    
-    return true;
-}
-
-// Validate register form
-function validateRegisterForm(name, email, password, ffid, isAdmin, adminCode, terms) {
-    // Basic validation
+    // Validation
     if (!name || !email || !password) {
         showAlert('Please fill in all required fields', 'danger');
-        return false;
-    }
-    
-    if (!validateEmail(email)) {
-        showAlert('Please enter a valid email address', 'danger');
-        return false;
-    }
-    
-    if (password.length < 6) {
-        showAlert('Password must be at least 6 characters', 'danger');
-        return false;
+        return;
     }
     
     if (!terms?.checked) {
         showAlert('Please agree to terms & conditions', 'danger');
-        return false;
+        return;
     }
     
-    // Role-specific validation
-    if (isAdmin) {
-        if (!adminCode) {
-            showAlert('Please enter admin code', 'danger');
-            return false;
-        }
-    } else {
-        if (!ffid) {
-            showAlert('Free Fire ID is required for players', 'danger');
-            return false;
-        }
+    // Password validation
+    if (password.length < 6) {
+        showAlert('Password must be at least 6 characters', 'danger');
+        return;
     }
     
-    return true;
-}
-
-// Email validation
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-// Login user
-async function loginUser(email, password, isAdmin = false) {
-    showLoading(true, 'login');
-    
-    try {
-        console.log("🔐 Attempting login for:", email);
-        
-        // Sign in with Firebase Auth
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        
-        console.log("✅ Auth successful, checking user data...");
-        
-        // Get user data from Realtime Database
-        const userRef = database.ref('users/' + user.uid);
-        const snapshot = await userRef.once('value');
-        
-        let userData;
-        
-        if (snapshot.exists()) {
-            userData = snapshot.val();
-            console.log("📊 User data found:", userData);
-        } else {
-            // Create new user entry if not exists
-            userData = {
-                name: user.email.split('@')[0],
-                email: user.email,
-                isAdmin: false,
-                ffid: '',
-                status: 'active',
-                emailVerified: user.emailVerified,
-                createdAt: firebase.database.ServerValue.TIMESTAMP
-            };
-            
-            await userRef.set(userData);
-            console.log("📝 Created new user entry in Realtime DB");
-        }
-        
-        // Admin validation
-        if (isAdmin && !userData.isAdmin) {
-            throw new Error('This account is not an administrator.');
-        }
-        
-        // Update last login
-        await userRef.update({
-            lastLogin: firebase.database.ServerValue.TIMESTAMP,
-            emailVerified: user.emailVerified
-        });
-        
-        // Store user data
-        currentUserData = userData;
-        localStorage.setItem('currentUser', JSON.stringify({
-            uid: user.uid,
-            email: user.email,
-            name: userData.name,
-            isAdmin: userData.isAdmin,
-            ffid: userData.ffid || '',
-            status: userData.status || 'active',
-            emailVerified: user.emailVerified
-        }));
-        
-        // Show success message
-        let welcomeMessage = `Welcome back, ${userData.name}!`;
-        if (!user.emailVerified) {
-            welcomeMessage += ' Please verify your email.';
-        }
-        
-        showAlert(welcomeMessage, 'success');
-        
-        // Redirect after delay
-        setTimeout(() => {
-            if (userData.isAdmin) {
-                window.location.href = 'admin-dashboard.html';
-            } else {
-                window.location.href = 'user-dashboard.html';
-            }
-        }, 2000);
-        
-    } catch (error) {
-        console.error('❌ Login error:', error);
-        handleAuthError(error);
-    } finally {
-        showLoading(false, 'login');
+    // Admin validation
+    if (isAdmin && !adminCode) {
+        showAlert('Please enter admin code', 'danger');
+        return;
     }
+    
+    if (isAdmin && adminCode !== adminSecretCode) {
+        showAlert('Invalid admin code', 'danger');
+        return;
+    }
+    
+    // User validation
+    if (!isAdmin && !ffid) {
+        showAlert('Free Fire ID is required for players', 'danger');
+        return;
+    }
+    
+    await performRegistration(name, email, password, ffid, isAdmin);
 }
 
-// Register new user
-async function registerUser(name, email, password, ffid, isAdmin = false, adminCode = '') {
+// Perform registration
+async function performRegistration(name, email, password, ffid, isAdmin) {
     showLoading(true, 'register');
     
     try {
-        console.log("📝 Registering new user:", email);
-        
-        // Verify admin code if registering as admin
-        if (isAdmin) {
-            if (adminCode !== adminSecretCode) {
-                throw new Error('Invalid admin code');
-            }
-        }
+        console.log("📝 Registering new user...");
         
         // Create user in Firebase Auth
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
         
-        console.log("✅ User created in Auth, sending verification email...");
+        console.log("✅ User created in Firebase Auth");
         
         // Send email verification
         await user.sendEmailVerification();
         
-        // Prepare user data for Realtime Database
+        // Create user data for Realtime Database
         const userData = {
             name: name,
             email: email,
@@ -386,55 +343,42 @@ async function registerUser(name, email, password, ffid, isAdmin = false, adminC
             status: 'active',
             emailVerified: false,
             createdAt: firebase.database.ServerValue.TIMESTAMP,
-            lastLogin: firebase.database.ServerValue.TIMESTAMP,
-            profileComplete: false
+            lastLogin: firebase.database.ServerValue.TIMESTAMP
         };
         
         // Save to Realtime Database
-        const userRef = database.ref('users/' + user.uid);
-        await userRef.set(userData);
+        await database.ref('users/' + user.uid).set(userData);
         
-        // Save to role-specific collection
+        // Create role-specific data
         if (isAdmin) {
             await database.ref('admins/' + user.uid).set({
-                ...userData,
+                email: email,
+                name: name,
                 permissions: ['manage_tournaments', 'manage_users', 'view_reports'],
-                adminSince: firebase.database.ServerValue.TIMESTAMP
+                createdAt: firebase.database.ServerValue.TIMESTAMP
             });
         } else {
             await database.ref('players/' + user.uid).set({
-                ...userData,
-                stats: {
-                    totalMatches: 0,
-                    totalKills: 0,
-                    totalWins: 0,
-                    winRate: 0,
-                    rank: 'Bronze',
-                    points: 0
-                },
-                tournamentHistory: {},
-                teamId: null
+                email: email,
+                name: name,
+                ffid: ffid,
+                stats: { totalMatches: 0, totalKills: 0, totalWins: 0 },
+                createdAt: firebase.database.ServerValue.TIMESTAMP
             });
         }
         
         // Store in localStorage
-        currentUserData = userData;
         localStorage.setItem('currentUser', JSON.stringify({
             uid: user.uid,
             email: user.email,
             name: name,
             isAdmin: isAdmin,
             ffid: isAdmin ? '' : ffid,
-            emailVerified: false,
-            createdAt: Date.now()
+            emailVerified: false
         }));
         
         // Show success message
-        const successMessage = isAdmin 
-            ? 'Admin account created successfully! Please check your email for verification.' 
-            : `Welcome ${name}! Account created. Please verify your email and complete your profile.`;
-        
-        showAlert(successMessage, 'success');
+        showAlert(`${isAdmin ? 'Admin' : 'Player'} account created successfully! Please verify your email.`, 'success');
         
         // Redirect after delay
         setTimeout(() => {
@@ -443,7 +387,7 @@ async function registerUser(name, email, password, ffid, isAdmin = false, adminC
             } else {
                 window.location.href = 'user-dashboard.html';
             }
-        }, 3000);
+        }, 2000);
         
     } catch (error) {
         console.error('❌ Registration error:', error);
@@ -476,11 +420,8 @@ function handleAuthError(error) {
         case 'auth/too-many-requests':
             errorMessage = 'Too many attempts. Please try again later.';
             break;
-        case 'auth/network-request-failed':
-            errorMessage = 'Network error. Please check your connection.';
-            break;
         default:
-            errorMessage += error.message;
+            errorMessage += error.message || 'Unknown error occurred';
     }
     
     showAlert(errorMessage, 'danger');
@@ -500,12 +441,12 @@ async function resetPassword() {
         showAlert('Password reset email sent! Check your inbox.', 'success');
     } catch (error) {
         console.error('Password reset error:', error);
-        showAlert('Error sending reset email: ' + error.message, 'danger');
+        showAlert('Error: ' + error.message, 'danger');
     }
 }
 
 // Show loading state
-function showLoading(isLoading, formType = '') {
+function showLoading(isLoading, formType) {
     let button;
     
     if (formType === 'login') {
@@ -553,8 +494,6 @@ function showAlert(message, type = 'info') {
     if (forms.length > 0) {
         const lastForm = forms[forms.length - 1];
         lastForm.parentNode.insertBefore(alertDiv, lastForm.nextSibling);
-    } else {
-        document.querySelector('.auth-card').appendChild(alertDiv);
     }
     
     // Auto remove after 5 seconds
@@ -565,7 +504,7 @@ function showAlert(message, type = 'info') {
     }, 5000);
 }
 
-// Get alert icon based on type
+// Get alert icon
 function getAlertIcon(type) {
     switch(type) {
         case 'success': return 'fa-check-circle';
@@ -576,53 +515,5 @@ function getAlertIcon(type) {
     }
 }
 
-// Check if user is admin (for other pages)
-async function checkAdminStatus() {
-    const user = auth.currentUser;
-    if (!user) return false;
-    
-    try {
-        const snapshot = await database.ref('users/' + user.uid).once('value');
-        if (snapshot.exists()) {
-            const userData = snapshot.val();
-            return userData.isAdmin || false;
-        }
-        return false;
-    } catch (error) {
-        console.error('Error checking admin status:', error);
-        return false;
-    }
-}
-
-// Logout function (for other pages)
-function logout() {
-    auth.signOut().then(() => {
-        localStorage.removeItem('currentUser');
-        currentUserData = null;
-        window.location.href = 'login.html';
-    }).catch(error => {
-        console.error('Logout error:', error);
-        showAlert('Error logging out: ' + error.message, 'danger');
-    });
-}
-
-// Export functions for use in other pages
-window.authFunctions = {
-    logout: logout,
-    checkAdminStatus: checkAdminStatus,
-    getCurrentUser: () => currentUserData,
-    updateAdminCode: async (newCode) => {
-        try {
-            await database.ref('config/adminConfig').update({
-                adminSecretCode: newCode,
-                updatedAt: firebase.database.ServerValue.TIMESTAMP,
-                updatedBy: auth.currentUser?.uid || 'system'
-            });
-            adminSecretCode = newCode;
-            return true;
-        } catch (error) {
-            console.error('Error updating admin code:', error);
-            return false;
-        }
-    }
-};
+// Global function for password reset
+window.resetPassword = resetPassword;
