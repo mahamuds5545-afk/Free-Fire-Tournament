@@ -1,224 +1,421 @@
-<!-- admin-login.html নামে নতুন ফাইল তৈরি করুন -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - FF Tournament</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
+        }
+        
+        .admin-login-container {
+            width: 100%;
+            max-width: 450px;
         }
         
         .admin-login-box {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(26, 26, 46, 0.95);
             backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 102, 0, 0.3);
+            position: relative;
+            overflow: hidden;
         }
         
-        .admin-login-box h2 {
-            color: #ff6600;
+        .admin-login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6600, #ff3300);
+            z-index: 1;
+        }
+        
+        .admin-header {
             text-align: center;
             margin-bottom: 30px;
-            font-size: 28px;
+        }
+        
+        .admin-header h1 {
+            color: white;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
         
         .admin-badge {
-            background: #ff6600;
+            background: linear-gradient(90deg, #ff6600, #ff3300);
             color: white;
             padding: 5px 15px;
             border-radius: 20px;
-            font-size: 12px;
-            display: inline-block;
-            margin-left: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
         }
         
-        .input-group {
-            margin-bottom: 20px;
+        .admin-subtitle {
+            color: #b0b0b0;
+            font-size: 1rem;
         }
         
-        .input-group label {
-            display: block;
+        /* Info Boxes */
+        .info-box {
+            background: rgba(255, 102, 0, 0.1);
+            border: 1px solid rgba(255, 102, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .info-box h3 {
+            color: #ff6600;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-box p {
             color: #ddd;
-            margin-bottom: 8px;
-            font-size: 14px;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
         
-        .input-group input {
-            width: 100%;
-            padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #444;
+        /* Test Credentials Box */
+        .test-credentials {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .test-credentials h3 {
+            color: #3498db;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .credential-item {
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
-            color: white;
-            font-size: 16px;
-            box-sizing: border-box;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .input-group input:focus {
+        .credential-label {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+        
+        .credential-value {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            font-family: monospace;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .form-label i {
+            margin-right: 8px;
+            color: #ff6600;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
             outline: none;
             border-color: #ff6600;
-            box-shadow: 0 0 5px rgba(255, 102, 0, 0.5);
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.2);
+            background: rgba(255, 255, 255, 0.12);
         }
         
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Button */
         .login-btn {
             width: 100%;
-            padding: 14px;
-            background: #ff6600;
+            padding: 16px;
+            background: linear-gradient(90deg, #ff6600, #ff3300);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         
         .login-btn:hover {
-            background: #ff8533;
+            background: linear-gradient(90deg, #ff3300, #ff6600);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 102, 0, 0.3);
         }
         
         .login-btn:disabled {
-            background: #666;
+            opacity: 0.6;
             cursor: not-allowed;
+            transform: none !important;
         }
         
+        /* Messages */
         .message {
-            padding: 10px;
-            border-radius: 5px;
-            margin: 15px 0;
-            text-align: center;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
             display: none;
+            animation: fadeIn 0.3s ease;
+            border-left: 4px solid;
         }
         
-        .error {
-            background: rgba(255, 0, 0, 0.1);
+        .error-message {
+            background: rgba(255, 51, 0, 0.1);
+            border-color: #ff3300;
             color: #ff6b6b;
-            border: 1px solid #ff6b6b;
         }
         
-        .success {
-            background: rgba(0, 255, 0, 0.1);
-            color: #4CAF50;
-            border: 1px solid #4CAF50;
+        .success-message {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: #00ff88;
+            color: #00ff88;
         }
         
-        .back-link {
+        .info-message {
+            background: rgba(0, 204, 255, 0.1);
+            border-color: #00ccff;
+            color: #00ccff;
+        }
+        
+        /* Links */
+        .links-container {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .back-link a {
-            color: #ffcc00;
+        .link {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 10px;
+            padding: 8px 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .link:hover {
+            color: #ff6600;
+            background: rgba(255, 102, 0, 0.1);
             text-decoration: none;
         }
         
-        .admin-instructions {
-            background: rgba(255, 102, 0, 0.1);
-            border: 1px solid #ff6600;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-size: 13px;
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .admin-instructions h4 {
-            color: #ff6600;
-            margin-top: 0;
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         
-        .admin-test-credentials {
-            background: rgba(52, 152, 219, 0.1);
-            border: 1px solid #3498db;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-size: 13px;
+        .pulse {
+            animation: pulse 2s infinite;
         }
         
-        .admin-test-credentials h4 {
-            color: #3498db;
-            margin-top: 0;
+        /* Responsive */
+        @media (max-width: 576px) {
+            .admin-login-box {
+                padding: 25px 20px;
+            }
+            
+            .admin-header h1 {
+                font-size: 1.8rem;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .info-box, .test-credentials {
+                padding: 15px;
+            }
+            
+            .link {
+                display: block;
+                margin: 10px 0;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="admin-login-box">
-        <h2>
-            <i class="fas fa-user-shield"></i> Admin Portal
-            <span class="admin-badge">SECURE</span>
-        </h2>
-        
-        <div class="admin-instructions">
-            <h4><i class="fas fa-info-circle"></i> Admin Access Only</h4>
-            <p>This portal is restricted to authorized administrators only. Unauthorized access is prohibited.</p>
-        </div>
-        
-        <div class="admin-test-credentials">
-            <h4><i class="fas fa-key"></i> Test Credentials</h4>
-            <p>Email: admin@admin.com</p>
-            <p>Password: admin123</p>
-            <p><small><i>Make sure this admin exists in Firebase Database</i></small></p>
-        </div>
-        
-        <div id="errorMessage" class="message error"></div>
-        <div id="successMessage" class="message success"></div>
-        
-        <div class="input-group">
-            <label for="adminEmail"><i class="fas fa-envelope"></i> Admin Email</label>
-            <input type="email" id="adminEmail" placeholder="Enter admin email" value="admin@admin.com">
-        </div>
-        
-        <div class="input-group">
-            <label for="adminPassword"><i class="fas fa-lock"></i> Password</label>
-            <input type="password" id="adminPassword" placeholder="Enter password" value="admin123">
-        </div>
-        
-        <button class="login-btn" onclick="adminLogin()" id="loginBtn">
-            <i class="fas fa-sign-in-alt"></i> Login as Admin
-        </button>
-        
-        <div class="back-link">
-            <p>
-                <a href="index.html"><i class="fas fa-home"></i> Back to Home</a> | 
-                <a href="login.html"><i class="fas fa-user"></i> User Login</a>
-            </p>
+    <div class="admin-login-container">
+        <div class="admin-login-box">
+            <!-- Header -->
+            <div class="admin-header">
+                <h1>
+                    <i class="fas fa-user-shield"></i>
+                    Admin Portal
+                    <span class="admin-badge">SECURE</span>
+                </h1>
+                <p class="admin-subtitle">Authorized Access Only</p>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="info-box">
+                <h3><i class="fas fa-info-circle"></i> IMPORTANT</h3>
+                <p>This portal is strictly for authorized administrators. All access attempts are logged and monitored.</p>
+            </div>
+            
+            <!-- Test Credentials -->
+            <div class="test-credentials">
+                <h3><i class="fas fa-key"></i> TEST CREDENTIALS</h3>
+                <div class="credential-item">
+                    <div class="credential-label">Email</div>
+                    <div class="credential-value">mahamud5545@gmail.com</div>
+                </div>
+                <div class="credential-item">
+                    <div class="credential-label">Password</div>
+                    <div class="credential-value">545545</div>
+                </div>
+                <div class="credential-item">
+                    <div class="credential-label">Admin Code</div>
+                    <div class="credential-value">ADMIN12345</div>
+                </div>
+                <p style="color: #aaa; font-size: 0.8rem; margin-top: 10px;">
+                    <i class="fas fa-exclamation-triangle"></i> Make sure this admin exists in Firebase Database
+                </p>
+            </div>
+            
+            <!-- Messages -->
+            <div id="errorMessage" class="message error-message"></div>
+            <div id="successMessage" class="message success-message"></div>
+            <div id="infoMessage" class="message info-message"></div>
+            
+            <!-- Login Form -->
+            <div class="form-group">
+                <label class="form-label" for="adminEmail">
+                    <i class="fas fa-envelope"></i> Admin Email
+                </label>
+                <input type="email" 
+                       class="form-input" 
+                       id="adminEmail" 
+                       placeholder="Enter admin email"
+                       value="mahamud5545@gmail.com">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="adminPassword">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <input type="password" 
+                       class="form-input" 
+                       id="adminPassword" 
+                       placeholder="Enter password"
+                       value="545545">
+            </div>
+            
+            <button class="login-btn" id="loginBtn" onclick="adminLogin()">
+                <i class="fas fa-sign-in-alt"></i> Login as Administrator
+            </button>
+            
+            <!-- Links -->
+            <div class="links-container">
+                <a href="index.html" class="link">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="login.html" class="link">
+                    <i class="fas fa-user"></i> User Login
+                </a>
+                <a href="register.html" class="link">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+            </div>
         </div>
     </div>
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
     <script>
         // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyA9HKKBo6KozIskG2oEF0PO7UCCScIxXdQ",
-            authDomain: "freefiregame-85e60.firebaseapp.com",
-            databaseURL: "https://freefiregame-85e60-default-rtdb.firebaseio.com",
-            projectId: "freefiregame-85e60",
-            storageBucket: "freefiregame-85e60.firebasestorage.app",
-            messagingSenderId: "961424698248",
-            appId: "1:961424698248:web:32e3d79f1bdfefaa9b283d",
-            measurementId: "G-7D31XM1SBC"
+            apiKey: "AIzaSyDXKSgO8ArAd32r5kHW4KzM4EHfFTd7AB4",
+            authDomain: "my-new-ff-app.firebaseapp.com",
+            databaseURL: "https://my-new-ff-app-default-rtdb.firebaseio.com",
+            projectId: "my-new-ff-app",
+            storageBucket: "my-new-ff-app.firebasestorage.app",
+            messagingSenderId: "721102554732",
+            appId: "1:721102554732:web:736adb31819cda998dba49",
+            measurementId: "G-YV8C2FFV5L"
         };
         
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
         const auth = firebase.auth();
         const database = firebase.database();
         
@@ -226,116 +423,146 @@
         function showMessage(type, message) {
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
+            const infoDiv = document.getElementById('infoMessage');
             
-            if(type === 'error') {
-                errorDiv.textContent = message;
-                errorDiv.style.display = 'block';
-                successDiv.style.display = 'none';
-            } else {
-                successDiv.textContent = message;
-                successDiv.style.display = 'block';
-                errorDiv.style.display = 'none';
+            // Hide all first
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            infoDiv.style.display = 'none';
+            
+            // Show specific message
+            switch(type) {
+                case 'error':
+                    errorDiv.textContent = message;
+                    errorDiv.style.display = 'block';
+                    break;
+                case 'success':
+                    successDiv.textContent = message;
+                    successDiv.style.display = 'block';
+                    break;
+                case 'info':
+                    infoDiv.textContent = message;
+                    infoDiv.style.display = 'block';
+                    break;
             }
-        }
-        
-        // Clear messages
-        function clearMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
         }
         
         // Admin Login Function
         async function adminLogin() {
-            const email = document.getElementById('adminEmail').value;
+            const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
             const loginBtn = document.getElementById('loginBtn');
             
             // Validation
-            if(!email || !password) {
-                showMessage('error', 'Please enter email and password');
+            if (!email || !password) {
+                showMessage('error', 'Please enter both email and password');
                 return;
             }
             
-            if(!email.includes('@') || !email.includes('.')) {
+            if (!validateEmail(email)) {
                 showMessage('error', 'Please enter a valid email address');
                 return;
             }
             
-            // Show loading
+            // Disable button and show loading
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-            clearMessages();
             
             try {
-                // Step 1: Firebase Authentication Login
+                console.log('🔐 Attempting admin login...');
+                
+                // Sign in with Firebase Auth
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 const user = userCredential.user;
                 
-                // Step 2: Check if user is admin in Database
+                console.log('✅ Firebase Auth successful:', user.uid);
+                
+                // Get user data from database
                 const userRef = database.ref('users/' + user.uid);
                 const snapshot = await userRef.once('value');
                 
-                if(!snapshot.exists()) {
-                    showMessage('error', 'User data not found in database');
+                if (!snapshot.exists()) {
+                    showMessage('error', 'User not found in database');
                     await auth.signOut();
                     return;
                 }
                 
                 const userData = snapshot.val();
+                console.log('📊 User data:', userData);
                 
-                // Step 3: Check if user has admin role
-                if(userData.role !== 'admin') {
-                    showMessage('error', 'Access Denied! This account is not an admin.');
+                // Check if user is admin
+                if (!userData.isAdmin) {
+                    showMessage('error', '❌ Access Denied! This account is not an administrator.');
                     await auth.signOut();
                     return;
                 }
                 
-                // Step 4: Check if admin is active
-                if(userData.isActive === false) {
-                    showMessage('error', 'Admin account is deactivated. Contact super admin.');
+                // Check if admin account is active
+                if (userData.status === 'inactive') {
+                    showMessage('error', 'Account deactivated. Contact super admin.');
                     await auth.signOut();
                     return;
                 }
                 
-                // Step 5: Success - Redirect to Admin Panel
-                showMessage('success', '✅ Admin authentication successful! Redirecting...');
+                // Update last login
+                await userRef.update({
+                    lastLogin: firebase.database.ServerValue.TIMESTAMP
+                });
                 
-                // Add admin login log
-                const logRef = database.ref('adminLogs/' + Date.now());
+                // Store user data in localStorage
+                localStorage.setItem('currentUser', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    name: userData.name || 'Admin',
+                    isAdmin: true,
+                    ffid: userData.ffid || '',
+                    status: userData.status || 'active'
+                }));
+                
+                // Log admin login
+                const logRef = database.ref('adminLogs').push();
                 await logRef.set({
                     adminId: user.uid,
                     adminEmail: user.email,
-                    loginTime: Date.now(),
-                    ip: 'web'
+                    loginTime: firebase.database.ServerValue.TIMESTAMP,
+                    action: 'login'
                 });
                 
-                // Redirect to admin panel
+                // Show success message
+                showMessage('success', '✅ Admin authentication successful! Redirecting...');
+                
+                // Redirect to admin dashboard
                 setTimeout(() => {
-                    window.location.href = 'admin.html';
+                    window.location.href = 'admin-dashboard.html';
                 }, 1500);
                 
             } catch (error) {
+                console.error('❌ Login error:', error);
+                
                 // Handle specific Firebase errors
                 let errorMessage = 'Login failed: ';
                 
                 switch(error.code) {
                     case 'auth/user-not-found':
-                        errorMessage = 'No admin account found with this email';
+                        errorMessage = 'No account found with this email';
                         break;
                     case 'auth/wrong-password':
                         errorMessage = 'Incorrect password';
                         break;
                     case 'auth/invalid-email':
-                        errorMessage = 'Invalid email format';
+                        errorMessage = 'Invalid email address';
                         break;
                     case 'auth/user-disabled':
-                        errorMessage = 'This account has been disabled';
+                        errorMessage = 'Account disabled';
                         break;
                     case 'auth/too-many-requests':
-                        errorMessage = 'Too many failed attempts. Try again later';
+                        errorMessage = 'Too many attempts. Try again later';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Check your connection';
                         break;
                     default:
-                        errorMessage = error.message;
+                        errorMessage = error.message || 'Unknown error occurred';
                 }
                 
                 showMessage('error', errorMessage);
@@ -343,156 +570,74 @@
             } finally {
                 // Reset button
                 loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login as Admin';
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login as Administrator';
             }
+        }
+        
+        // Email validation
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
         }
         
         // Check if user is already logged in as admin
         auth.onAuthStateChanged(async (user) => {
-            if(user) {
-                // Check if already admin
-                const userRef = database.ref('users/' + user.uid);
-                const snapshot = await userRef.once('value');
-                
-                if(snapshot.exists()) {
-                    const userData = snapshot.val();
-                    if(userData.role === 'admin') {
-                        // Already admin, redirect to admin panel
-                        window.location.href = 'admin.html';
+            if (user) {
+                try {
+                    // Check if user is admin
+                    const userRef = database.ref('users/' + user.uid);
+                    const snapshot = await userRef.once('value');
+                    
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        if (userData.isAdmin) {
+                            // Already admin, redirect to admin dashboard
+                            showMessage('info', 'Already logged in as admin. Redirecting...');
+                            setTimeout(() => {
+                                window.location.href = 'admin-dashboard.html';
+                            }, 1000);
+                        }
                     }
+                } catch (error) {
+                    console.error('Error checking admin status:', error);
                 }
             }
         });
         
         // Enter key support
         document.addEventListener('keypress', function(event) {
-            if(event.key === 'Enter') {
+            if (event.key === 'Enter') {
                 adminLogin();
             }
         });
         
-        // Test credentials auto-fill
-        document.getElementById('adminEmail').addEventListener('click', function() {
-            if(this.value === 'admin@admin.com') {
-                showMessage('success', 'Test credentials loaded. Click Login to test.');
+        // Auto-fill test credentials info
+        document.getElementById('adminEmail').addEventListener('focus', function() {
+            if (this.value === 'mahamud5545@gmail.com') {
+                showMessage('info', 'Test credentials loaded. Click Login to test admin access.');
             }
         });
-    </script><script>
-// Admin Access Protection
-document.addEventListener('DOMContentLoaded', function() {
-    const MASTER_ADMIN_UID = "WWVy9uIRj5bw284KWlTPtoYlNv32";
-    
-    // Check localStorage first
-    const storedUser = JSON.parse(localStorage.getItem('currentUser'));
-    
-    if (!storedUser) {
-        alert("Please login first");
-        window.location.href = "login.html";
-        return;
-    }
-    
-    // Special check for master admin UID
-    if (storedUser.uid === MASTER_ADMIN_UID) {
-        console.log("👑 Master Admin detected");
-        // Grant immediate access for master admin
-        showAdminDashboard();
-        return;
-    }
-    
-    // For other users, check Firebase
-    firebase.auth().onAuthStateChanged(async (user) => {
-        if (!user) {
-            alert("Session expired. Please login again.");
-            window.location.href = "login.html";
-            return;
+        
+        // Master admin UID check
+        const MASTER_ADMIN_UID = "WWVy9uIRj5bw284KWlTPtoYlNv32";
+        
+        // Check for master admin
+        function checkMasterAdmin() {
+            const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+            
+            if (storedUser && storedUser.uid === MASTER_ADMIN_UID) {
+                console.log('👑 Master Admin detected');
+                showMessage('info', 'Master Admin privileges detected');
+                document.getElementById('adminEmail').value = storedUser.email || 'mahamud5545@gmail.com';
+            }
         }
         
-        const database = firebase.database();
+        // Run on page load
+        checkMasterAdmin();
         
-        // Check if user is admin in database
-        const userSnapshot = await database.ref('users/' + user.uid).once('value');
-        
-        if (!userSnapshot.exists()) {
-            alert("User not found in database");
-            window.location.href = "login.html";
-            return;
-        }
-        
-        const userData = userSnapshot.val();
-        
-        if (!userData.isAdmin) {
-            alert("Admin privileges required");
-            window.location.href = "user-dashboard.html";
-            return;
-        }
-        
-        showAdminDashboard();
-    });
-    
-    function showAdminDashboard() {
-        document.getElementById('adminContent').style.display = 'block';
-        document.getElementById('welcomeMessage').textContent = 
-            `Welcome Master Admin!`;
-    }
-});
-</script> <script>
-// Admin Access Protection
-document.addEventListener('DOMContentLoaded', function() {
-    const MASTER_ADMIN_UID = "WWVy9uIRj5bw284KWlTPtoYlNv32";
-    
-    // Check localStorage first
-    const storedUser = JSON.parse(localStorage.getItem('currentUser'));
-    
-    if (!storedUser) {
-        alert("Please login first");
-        window.location.href = "login.html";
-        return;
-    }
-    
-    // Special check for master admin UID
-    if (storedUser.uid === MASTER_ADMIN_UID) {
-        console.log("👑 Master Admin detected");
-        // Grant immediate access for master admin
-        showAdminDashboard();
-        return;
-    }
-    
-    // For other users, check Firebase
-    firebase.auth().onAuthStateChanged(async (user) => {
-        if (!user) {
-            alert("Session expired. Please login again.");
-            window.location.href = "login.html";
-            return;
-        }
-        
-        const database = firebase.database();
-        
-        // Check if user is admin in database
-        const userSnapshot = await database.ref('users/' + user.uid).once('value');
-        
-        if (!userSnapshot.exists()) {
-            alert("User not found in database");
-            window.location.href = "login.html";
-            return;
-        }
-        
-        const userData = userSnapshot.val();
-        
-        if (!userData.isAdmin) {
-            alert("Admin privileges required");
-            window.location.href = "user-dashboard.html";
-            return;
-        }
-        
-        showAdminDashboard();
-    });
-    
-    function showAdminDashboard() {
-        document.getElementById('adminContent').style.display = 'block';
-        document.getElementById('welcomeMessage').textContent = 
-            `Welcome Master Admin!`;
-    }
-});
-</script>
+        // Initialize
+        console.log('🔥 Admin login page loaded');
+        showMessage('info', 'Enter admin credentials to continue');
+    </script>
 </body>
 </html>
