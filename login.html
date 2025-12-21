@@ -85,65 +85,68 @@
     <script type="module" src="js/auth.js"></script>
     
     <script>
-        // Tab switching function
-        function showTab(tabName) {
-            // Update tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Update forms
-            document.getElementById('loginForm').classList.remove('active');
-            document.getElementById('registerForm').classList.remove('active');
-            document.getElementById(tabName + 'Form').classList.add('active');
-        }
+        // login.html এর script section এ এই function টি replace করুন
+async function performRegister() {
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    const ffid = document.getElementById('registerFFID').value;
+    
+    // Validation
+    if(!name || !email || !password || !ffid) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    if(password.length < 6) {
+        alert('Password must be at least 6 characters');
+        return;
+    }
+    
+    if(!email.includes('@')) {
+        alert('Please enter a valid email');
+        return;
+    }
+    
+    console.log('Attempting registration...');
+    
+    // Show loading
+    const button = event.target;
+    const originalText = button.textContent;
+    button.textContent = 'Registering...';
+    button.disabled = true;
+    
+    try {
+        const result = await registerUser(name, email, password, ffid);
         
-        // Login function
-        async function performLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+        if(result.success) {
+            alert(result.message);
             
-            if(!email || !password) {
-                alert('Please enter email and password');
-                return;
-            }
-            
-            const success = await loginUser(email, password);
-            if(success) {
-                window.location.href = 'user.html';
-            }
-        }
-        
-        // Register function
-        async function performRegister() {
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const ffid = document.getElementById('registerFFID').value;
-            
-            if(!name || !email || !password || !ffid) {
-                alert('Please fill all fields');
-                return;
-            }
-            
-            const success = await registerUser(name, email, password, ffid);
-            if(success) {
-                alert('Registration successful! Please login.');
+            // Auto login after registration
+            const loginResult = await loginUser(email, password);
+            if(loginResult.success) {
+                // Redirect to user dashboard
+                setTimeout(() => {
+                    window.location.href = 'user.html';
+                }, 1000);
+            } else {
+                alert('Auto login failed: ' + loginResult.message);
                 showTab('login');
             }
+        } else {
+            alert(result.message);
         }
         
-        // Enter key support
-        document.addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') {
-                if(document.getElementById('loginForm').classList.contains('active')) {
-                    performLogin();
-                } else {
-                    performRegister();
-                }
-            }
-        });
+    } catch (error) {
+        alert('Registration error: ' + error.message);
+        console.error('Registration catch error:', error);
+    } finally {
+        // Reset button
+        button.textContent = originalText;
+        button.disabled = false;
+    }
+}
     </script>
 </body>
 </html>
+
