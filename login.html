@@ -108,7 +108,117 @@
             </div>
         </div>
     </div>
+// Setup Master Admin Account
+async function setupMasterAdmin() {
+    const adminUID = "WWVy9uIRj5bw284KWlTPtoYlNv32";
+    const adminEmail = "mahamud5545@gmail.com";
+    const adminPassword = "545545";
+    
+    console.log("🚀 Setting up master admin account...");
+    
+    try {
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXKSgO8ArAd32r5kHW4KzM4EHfFTd7AB4",
+            authDomain: "my-new-ff-app.firebaseapp.com",
+            databaseURL: "https://my-new-ff-app-default-rtdb.firebaseio.com",
+            projectId: "my-new-ff-app",
+            storageBucket: "my-new-ff-app.firebasestorage.app",
+            messagingSenderId: "721102554732",
+            appId: "1:721102554732:web:736adb31819cda998dba49"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const auth = firebase.auth();
+        const database = firebase.database();
+        
+        // Try to create user in Firebase Auth
+        let user;
+        try {
+            const userCredential = await auth.createUserWithEmailAndPassword(adminEmail, adminPassword);
+            user = userCredential.user;
+            console.log("✅ User created in Firebase Auth");
+        } catch (authError) {
+            // If user already exists, sign in
+            if (authError.code === 'auth/email-already-in-use') {
+                console.log("ℹ️ User already exists, signing in...");
+                const userCredential = await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
+                user = userCredential.user;
+            } else {
+                throw authError;
+            }
+        }
+        
+        // Setup user data in Realtime Database
+        const userData = {
+            name: "Master Admin",
+            email: adminEmail,
+            isAdmin: true,
+            status: "active",
+            ffid: "",
+            emailVerified: true,
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastLogin: firebase.database.ServerValue.TIMESTAMP,
+            masterAdmin: true
+        };
+        
+        await database.ref('users/' + adminUID).set(userData);
+        console.log("✅ User data created in database");
+        
+        // Setup admin data
+        const adminData = {
+            name: "Master Admin",
+            email: adminEmail,
+            permissions: ["manage_users", "manage_tournaments", "manage_admins", "manage_config"],
+            masterAdmin: true,
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        await database.ref('admins/' + adminUID).set(adminData);
+        console.log("✅ Admin data created");
+        
+        // Setup admin config
+        const adminConfig = {
+            adminSecretCode: "ADMIN12345",
+            masterAdminId: adminUID,
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        await database.ref('config/adminConfig').set(adminConfig);
+        console.log("✅ Admin config created");
+        
+        console.log("🎉 Master Admin setup complete!");
+        console.log("📋 Admin Details:");
+        console.log("- UID:", adminUID);
+        console.log("- Email:", adminEmail);
+        console.log("- Password: 545545");
+        console.log("- Admin Code: ADMIN12345");
+        
+        // Auto login and redirect
+        localStorage.setItem('currentUser', JSON.stringify({
+            uid: adminUID,
+            email: adminEmail,
+            name: "Master Admin",
+            isAdmin: true,
+            ffid: "",
+            masterAdmin: true
+        }));
+        
+        alert("Master Admin created successfully! Redirecting to admin dashboard...");
+        window.location.href = "admin-dashboard.html";
+        
+    } catch (error) {
+        console.error("❌ Error:", error);
+        alert("Error: " + error.message);
+    }
+}
 
+// Run the setup
+setupMasterAdmin();
    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -121,4 +231,5 @@
     <script src="js/auth.js"></script>
 </body>
 </html>
+
 
