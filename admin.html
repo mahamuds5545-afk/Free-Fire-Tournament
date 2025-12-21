@@ -377,6 +377,64 @@
                 showMessage('success', 'Test credentials loaded. Click Login to test.');
             }
         });
-    </script>
+    </script><script>
+// Admin Access Protection
+document.addEventListener('DOMContentLoaded', function() {
+    const MASTER_ADMIN_UID = "WWVy9uIRj5bw284KWlTPtoYlNv32";
+    
+    // Check localStorage first
+    const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+    
+    if (!storedUser) {
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+    
+    // Special check for master admin UID
+    if (storedUser.uid === MASTER_ADMIN_UID) {
+        console.log("👑 Master Admin detected");
+        // Grant immediate access for master admin
+        showAdminDashboard();
+        return;
+    }
+    
+    // For other users, check Firebase
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (!user) {
+            alert("Session expired. Please login again.");
+            window.location.href = "login.html";
+            return;
+        }
+        
+        const database = firebase.database();
+        
+        // Check if user is admin in database
+        const userSnapshot = await database.ref('users/' + user.uid).once('value');
+        
+        if (!userSnapshot.exists()) {
+            alert("User not found in database");
+            window.location.href = "login.html";
+            return;
+        }
+        
+        const userData = userSnapshot.val();
+        
+        if (!userData.isAdmin) {
+            alert("Admin privileges required");
+            window.location.href = "user-dashboard.html";
+            return;
+        }
+        
+        showAdminDashboard();
+    });
+    
+    function showAdminDashboard() {
+        document.getElementById('adminContent').style.display = 'block';
+        document.getElementById('welcomeMessage').textContent = 
+            `Welcome Master Admin!`;
+    }
+});
+</script>
 </body>
 </html>
