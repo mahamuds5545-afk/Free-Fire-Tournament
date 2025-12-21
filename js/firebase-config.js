@@ -1,28 +1,17 @@
-// Firebase v9 Modular Setup
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-
-// Your Firebase configuration
+// Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyA9HKKBo6KozIskG2oEF0PO7UCCScIxXdQ",
-  authDomain: "freefiregame-85e60.firebaseapp.com",
-  databaseURL: "https://freefiregame-85e60-default-rtdb.firebaseio.com",
-  projectId: "freefiregame-85e60",
-  storageBucket: "freefiregame-85e60.firebasestorage.app",
-  messagingSenderId: "961424698248",
-  appId: "1:961424698248:web:32e3d79f1bdfefaa9b283d",
-  measurementId: "G-7D31XM1SBC"
+    apiKey: "AIzaSyDXKSgO8ArAd32r5kHW4KzM4EHfFTd7AB4",
+    authDomain: "my-new-ff-app.firebaseapp.com",
+    databaseURL: "https://my-new-ff-app-default-rtdb.firebaseio.com/",
+    projectId: "my-new-ff-app",
+    storageBucket: "my-new-ff-app.firebasestorage.app",
+    messagingSenderId: "721102554732",
+    appId: "1:721102554732:web:736adb31819cda998dba49",
+    measurementId: "G-YV8C2FFV5L"
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
-
-console.log("Firebase v9 Modular initialized!");
-
-// Make available globally
-window.auth = auth;
-window.database = database;
-window.firebaseApp = app;
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
+const analytics = firebase.analytics();
