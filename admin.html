@@ -111,13 +111,17 @@
         .player-table th {
             background: #f8f9fa;
         }
+        .admin-email-display {
+            margin-right: 15px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="admin-header">
-        <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+        <h2><i class="fas fa-user-shield"></i> Admin Panel - Free Fire Tournament</h2>
         <div>
-            <span id="adminEmail"></span>
+            <span class="admin-email-display" id="currentAdminEmail"></span>
             <button onclick="logout()" class="btn">Logout</button>
         </div>
     </div>
@@ -133,6 +137,9 @@
             </a>
             <a href="#" onclick="showSection('users')">
                 <i class="fas fa-users"></i> User Management
+            </a>
+            <a href="#" onclick="showSection('admins')">
+                <i class="fas fa-user-cog"></i> Admin Management
             </a>
             <a href="#" onclick="showSection('recharge')">
                 <i class="fas fa-money-check-alt"></i> Recharge Requests
@@ -167,8 +174,8 @@
                             <p>Total Revenue</p>
                         </div>
                         <div style="text-align: center; padding: 15px; background: #f3e5f5; border-radius: 8px;">
-                            <h3 id="pendingRequests">0</h3>
-                            <p>Pending Requests</p>
+                            <h3 id="totalAdmins">0</h3>
+                            <p>Admin Users</p>
                         </div>
                     </div>
                 </div>
@@ -225,6 +232,39 @@
                     
                     <div id="usersList">
                         Loading users...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin Management Section -->
+            <div id="adminsSection" class="content-section" style="display: none;">
+                <h2>Admin Management</h2>
+                
+                <div class="card">
+                    <h3><i class="fas fa-user-plus"></i> Add New Admin</h3>
+                    <p style="color: #666; margin-bottom: 15px;">Create a new admin account. An email with login details will be sent.</p>
+                    
+                    <input type="text" id="newAdminName" placeholder="Admin Full Name" required>
+                    <input type="email" id="newAdminEmail" placeholder="Admin Email Address" required>
+                    <input type="text" id="newAdminFFID" placeholder="Free Fire ID" required>
+                    <input type="number" id="newAdminBalance" placeholder="Initial Balance" value="5000">
+                    
+                    <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" id="sendEmailInvite" style="width: auto; margin-right: 10px;">
+                            Send email invitation with temporary password
+                        </label>
+                    </div>
+                    
+                    <button onclick="createNewAdmin()" class="btn btn-success" style="width: 100%;">
+                        <i class="fas fa-user-plus"></i> Create Admin Account
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-users-cog"></i> All Admin Users</h3>
+                    <div id="adminUsersList">
+                        Loading admin users...
                     </div>
                 </div>
             </div>
@@ -288,7 +328,7 @@
                 return;
             }
             
-            document.getElementById('adminEmail').textContent = user.email;
+            document.getElementById('currentAdminEmail').textContent = user.email;
             
             // Check if user is admin
             const userRef = database.ref('users/' + user.uid);
@@ -309,6 +349,7 @@
             loadUsers();
             loadTournaments();
             loadStats();
+            loadAdminUsers();
         }
         
         // Show section
@@ -326,6 +367,179 @@
                 link.classList.remove('active');
             });
             event.target.classList.add('active');
+        }
+        
+        // Create new admin account
+        async function createNewAdmin() {
+            const name = document.getElementById('newAdminName').value;
+            const email = document.getElementById('newAdminEmail').value;
+            const ffid = document.getElementById('newAdminFFID').value;
+            const balance = document.getElementById('newAdminBalance').value;
+            const sendEmail = document.getElementById('sendEmailInvite').checked;
+            
+            if(!name || !email || !ffid) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if(!emailRegex.test(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // Generate a temporary password
+            const tempPassword = generatePassword() + "123"; // Example: "ABC123"
+            
+            try {
+                // 1. Create user in Firebase Authentication
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, tempPassword);
+                const newAdmin = userCredential.user;
+                
+                // 2. Save admin data to Realtime Database
+                await firebase.database().ref('users/' + newAdmin.uid).set({
+                    name: name,
+                    email: email,
+                    ffid: ffid,
+                    balance: parseInt(balance) || 5000,
+                    role: 'admin',
+                    joinDate: new Date().toISOString(),
+                    isActive: true,
+                    createdAt: Date.now(),
+                    createdBy: firebase.auth().currentUser.uid,
+                    createdByEmail: firebase.auth().currentUser.email
+                });
+                
+                // 3. Send password reset email (optional)
+                if(sendEmail) {
+                    try {
+                        await firebase.auth().sendPasswordResetEmail(email);
+                        // Show success message
+                        const message = `
+                        ✅ Admin created successfully!
+                        
+                        Admin Details:
+                        Name: ${name}
+                        Email: ${email}
+                        Temporary Password: ${tempPassword}
+                        
+                        ✅ Password reset email has been sent!
+                        
+                        Instructions for new admin:
+                        1. Go to: https://yourusername.github.io/free-fire-tournament/login.html
+                        2. Login with email and temporary password
+                        3. You will be prompted to change your password
+                        `;
+                        alert(message);
+                    } catch (emailError) {
+                        // If email fails, show manual password
+                        const message = `
+                        ✅ Admin created successfully!
+                        
+                        Admin Details:
+                        Name: ${name}
+                        Email: ${email}
+                        Temporary Password: ${tempPassword}
+                        
+                        ⚠️ Email sending failed. Please share these credentials manually.
+                        
+                        Instructions for new admin:
+                        1. Go to: https://yourusername.github.io/free-fire-tournament/login.html
+                        2. Login with email and temporary password: ${tempPassword}
+                        3. Change password immediately
+                        `;
+                        alert(message);
+                    }
+                } else {
+                    // Show credentials for manual sharing
+                    const message = `
+                    ✅ Admin created successfully!
+                    
+                    Admin Details:
+                    Name: ${name}
+                    Email: ${email}
+                    Temporary Password: ${tempPassword}
+                    
+                    Please share these credentials with the new admin.
+                    
+                    Instructions for new admin:
+                    1. Go to: https://yourusername.github.io/free-fire-tournament/login.html
+                    2. Login with email and temporary password: ${tempPassword}
+                    3. Change password immediately
+                    `;
+                    alert(message);
+                }
+                
+                // Clear form
+                document.getElementById('newAdminName').value = '';
+                document.getElementById('newAdminEmail').value = '';
+                document.getElementById('newAdminFFID').value = '';
+                document.getElementById('newAdminBalance').value = '5000';
+                document.getElementById('sendEmailInvite').checked = false;
+                
+                // Refresh admin list and stats
+                loadAdminUsers();
+                loadStats();
+                
+            } catch (error) {
+                let errorMessage = 'Error creating admin: ';
+                switch(error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage += 'This email is already registered.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage += 'Invalid email address.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage += 'Password is too weak.';
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                alert(errorMessage);
+            }
+        }
+        
+        // Load admin users
+        async function loadAdminUsers() {
+            try {
+                const snapshot = await database.ref('users').orderByChild('role').equalTo('admin').once('value');
+                
+                if(snapshot.exists()) {
+                    const admins = snapshot.val();
+                    let html = '<table class="player-table">';
+                    html += '<tr><th>Name</th><th>Email</th><th>FF ID</th><th>Balance</th><th>Joined</th><th>Status</th></tr>';
+                    
+                    Object.keys(admins).forEach(userId => {
+                        const admin = admins[userId];
+                        const joinDate = new Date(admin.joinDate || admin.createdAt).toLocaleDateString();
+                        
+                        html += `
+                            <tr>
+                                <td>${admin.name || 'N/A'}</td>
+                                <td>${admin.email || 'N/A'}</td>
+                                <td>${admin.ffid || 'N/A'}</td>
+                                <td>৳${admin.balance || 0}</td>
+                                <td>${joinDate}</td>
+                                <td>
+                                    <span style="color: ${admin.isActive ? '#27ae60' : '#e74c3c'}; font-weight: bold;">
+                                        ${admin.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</table>';
+                    document.getElementById('adminUsersList').innerHTML = html;
+                } else {
+                    document.getElementById('adminUsersList').innerHTML = '<p>No admin users found.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading admin users:', error);
+                document.getElementById('adminUsersList').innerHTML = '<p>Error loading admin users.</p>';
+            }
         }
         
         // Create tournament
@@ -611,16 +825,23 @@
                 if(snapshot.exists()) {
                     const users = snapshot.val();
                     let html = '<table class="player-table">';
-                    html += '<tr><th>Name</th><th>Email</th><th>FF ID</th><th>Balance</th><th>Actions</th></tr>';
+                    html += '<tr><th>Name</th><th>Email</th><th>FF ID</th><th>Balance</th><th>Role</th><th>Actions</th></tr>';
                     
                     Object.keys(users).forEach(userId => {
                         const user = users[userId];
+                        const roleColor = user.role === 'admin' ? '#e74c3c' : '#3498db';
+                        
                         html += `
                             <tr>
                                 <td>${user.name || 'N/A'}</td>
                                 <td>${user.email || 'N/A'}</td>
                                 <td>${user.ffid || 'N/A'}</td>
                                 <td>৳${user.balance || 0}</td>
+                                <td>
+                                    <span style="color: ${roleColor}; font-weight: bold;">
+                                        ${user.role || 'user'}
+                                    </span>
+                                </td>
                                 <td>
                                     <button class="btn" onclick="editUser('${userId}')">
                                         Edit
@@ -708,7 +929,12 @@
                 // Load users count
                 const usersSnap = await database.ref('users').once('value');
                 const users = usersSnap.val() || {};
-                document.getElementById('totalUsers').textContent = Object.keys(users).length;
+                const totalUsers = Object.keys(users).length;
+                document.getElementById('totalUsers').textContent = totalUsers;
+                
+                // Load admin count
+                const adminCount = Object.values(users).filter(user => user.role === 'admin').length;
+                document.getElementById('totalAdmins').textContent = adminCount;
                 
                 // Load tournaments count and revenue
                 const tournamentsSnap = await database.ref('tournaments').once('value');
@@ -753,101 +979,7 @@
             if(!user) {
                 window.location.href = 'login.html';
             }
-        });// admin.html এর script section এ যোগ করুন
-async function createNewAdmin() {
-    const name = document.getElementById('adminName').value;
-    const email = document.getElementById('adminEmail').value;
-    const ffid = document.getElementById('adminFFID').value;
-    const balance = document.getElementById('adminBalance').value;
-    const sendEmail = document.getElementById('sendEmailInvite').checked;
-    
-    if(!name || !email || !ffid) {
-        alert('Please fill all fields');
-        return;
-    }
-    
-    // Generate a temporary password
-    const tempPassword = generatePassword() + "123"; // Example: "ABC123"
-    
-    try {
-        // 1. Create user in Firebase Authentication
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, tempPassword);
-        const newAdmin = userCredential.user;
-        
-        // 2. Save admin data to Realtime Database
-        await firebase.database().ref('users/' + newAdmin.uid).set({
-            name: name,
-            email: email,
-            ffid: ffid,
-            balance: parseInt(balance) || 5000,
-            role: 'admin',
-            joinDate: new Date().toISOString(),
-            isActive: true,
-            createdAt: Date.now(),
-            createdBy: firebase.auth().currentUser.uid
         });
-        
-        // 3. Send password reset email (optional)
-        if(sendEmail) {
-            await firebase.auth().sendPasswordResetEmail(email);
-        }
-        
-        // Show success message with credentials
-        const message = `
-        ✅ Admin created successfully!
-        
-        Admin Details:
-        Name: ${name}
-        Email: ${email}
-        Temporary Password: ${tempPassword}
-        
-        ${sendEmail ? 'Password reset email sent!' : 'Please share the password manually.'}
-        
-        Instructions:
-        1. Go to: https://yourusername.github.io/free-fire-tournament/login.html
-        2. Login with email and temporary password
-        3. Change password immediately
-        `;
-        
-        alert(message);
-        
-        // Clear form
-        document.getElementById('adminName').value = '';
-        document.getElementById('adminEmail').value = '';
-        document.getElementById('adminFFID').value = '';
-        
-    } catch (error) {
-        alert('Error creating admin: ' + error.message);
-    }
-}
-
-// Helper function to generate password
-function generatePassword() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let password = '';
-    for(let i = 0; i < 6; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-}
     </script>
-    <!-- admin.html এর মধ্যে কোথাও যোগ করুন -->
-<div class="card">
-    <h3>➕ Add New Admin</h3>
-    <input type="text" id="adminName" placeholder="Admin Full Name">
-    <input type="email" id="adminEmail" placeholder="Admin Email">
-    <input type="text" id="adminFFID" placeholder="Free Fire ID">
-    <input type="number" id="adminBalance" placeholder="Initial Balance" value="5000">
-    
-    <div style="margin: 10px 0;">
-        <label>
-            <input type="checkbox" id="sendEmailInvite"> Send email invitation
-        </label>
-    </div>
-    
-    <button onclick="createNewAdmin()" class="btn btn-success">Create Admin Account</button>
-</div>
 </body>
 </html>
-
-
