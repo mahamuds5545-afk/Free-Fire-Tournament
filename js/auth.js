@@ -255,9 +255,9 @@ async function performLogin(email, password, isAdmin) {
         // Redirect to appropriate dashboard
         setTimeout(() => {
             if (userData.isAdmin) {
-                window.location.href = 'admin-dashboard.html';
+                window.location.href = 'admin.html';
             } else {
-                window.location.href = 'user-dashboard.html';
+                window.location.href = 'user.html';
             }
         }, 1500);
         
@@ -517,4 +517,5 @@ function getAlertIcon(type) {
 
 // Global function for password reset
 window.resetPassword = resetPassword;
+
 
