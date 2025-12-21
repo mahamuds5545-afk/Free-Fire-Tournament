@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FF Tournament</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-box {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div style="background: #ff6600; padding: 15px;">
+        <h2 style="margin:0; color:white;">Login / Register</h2>
+    </div>
+    
+    <div class="login-box">
+        <h3>Login to Account</h3>
+        <input type="email" placeholder="Email" id="email">
+        <input type="password" placeholder="Password" id="password">
+        <button class="btn-primary" onclick="login()">Login</button>
+        
+        <p style="text-align: center; margin-top: 20px;">
+            Don't have account? 
+            <a href="#" onclick="showRegister()">Register here</a>
+        </p>
+    </div>
+    
+    <script>
+        function login() {
+            alert("Login feature will be added!");
+            window.location.href = "user.html";
+        }
+        
+        function showRegister() {
+            alert("Register form will appear here!");
+        }
+    </script>
+    <script src="js/common.js"></script>
+</body>
+</html>

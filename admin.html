@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        .admin-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+        }
+        .sidebar {
+            width: 200px;
+            background: #34495e;
+            height: 100vh;
+            float: left;
+        }
+        .sidebar a {
+            display: block;
+            color: white;
+            padding: 10px;
+            text-decoration: none;
+        }
+        .content {
+            margin-left: 200px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h2>⚙️ Admin Panel</h2>
+    </div>
+    
+    <div class="sidebar">
+        <a href="admin.html">Dashboard</a>
+        <a href="#">Users</a>
+        <a href="#">Tournaments</a>
+        <a href="index.html">Back to Home</a>
+    </div>
+    
+    <div class="content">
+        <h3>Welcome Admin!</h3>
+        <p>Here you can manage tournaments, users, and settings.</p>
+        
+        <div class="card">
+            <h4>Quick Stats</h4>
+            <p>Total Users: 0</p>
+            <p>Total Tournaments: 0</p>
+        </div>
+    </div>
+    
+    <script src="js/admin.js"></script>
+    <script src="js/common.js"></script>
+</body>
+</html>
