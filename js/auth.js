@@ -1,161 +1,270 @@
-// Authentication Functions for Firebase v9
-import { 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+// Authentication Functions
+class AuthManager {
+    constructor() {
+        this.currentUser = null;
+        this.userRole = null;
+        this.init();
+    }
 
-import { 
-    ref, 
-    set, 
-    get, 
-    update 
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+    init() {
+        // Check if user is logged in
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                this.currentUser = user;
+                this.getUserRole(user.uid);
+            } else {
+                this.currentUser = null;
+                this.userRole = null;
+            }
+        });
+    }
 
-// Global variables
-let auth, database;
+    // Login with email/password
+    async login(email, password) {
+        try {
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // Get user role from database
+            const snapshot = await database.ref('users/' + user.uid).once('value');
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                this.userRole = userData.role || 'user';
+                
+                // Redirect based on role
+                if (this.userRole === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'user.html';
+                }
+                return true;
+            } else {
+                throw new Error('User data not found');
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
 
-// Initialize when config loads
+    // Register new user
+    async register(email, password, name, ffid) {
+        try {
+            // Create user in Firebase Auth
+            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            // Create user profile in database
+            const userData = {
+                name: name,
+                email: email,
+                ffid: ffid,
+                role: 'user',
+                balance: 0,
+                kills: 0,
+                wins: 0,
+                matches: 0,
+                joinDate: new Date().toISOString(),
+                isActive: true,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            await database.ref('users/' + user.uid).set(userData);
+            
+            // Send email verification
+            await user.sendEmailVerification();
+            
+            // Auto login
+            return this.login(email, password);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // Get user role
+    async getUserRole(uid) {
+        try {
+            const snapshot = await database.ref('users/' + uid + '/role').once('value');
+            this.userRole = snapshot.val() || 'user';
+            return this.userRole;
+        } catch (error) {
+            console.error('Error getting user role:', error);
+            return 'user';
+        }
+    }
+
+    // Logout
+    async logout() {
+        try {
+            await firebase.auth().signOut();
+            window.location.href = 'index.html';
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // Reset password
+    async resetPassword(email) {
+        try {
+            await firebase.auth().sendPasswordResetEmail(email);
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // Check if user is admin
+    isAdmin() {
+        return this.userRole === 'admin';
+    }
+
+    // Check if user is authenticated
+    isAuthenticated() {
+        return this.currentUser !== null;
+    }
+
+    // Get current user data
+    async getCurrentUserData() {
+        if (!this.currentUser) return null;
+        
+        try {
+            const snapshot = await database.ref('users/' + this.currentUser.uid).once('value');
+            return snapshot.val();
+        } catch (error) {
+            console.error('Error getting user data:', error);
+            return null;
+        }
+    }
+
+    // Update user profile
+    async updateProfile(data) {
+        if (!this.currentUser) return false;
+        
+        try {
+            await database.ref('users/' + this.currentUser.uid).update(data);
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // Change password
+    async changePassword(newPassword) {
+        try {
+            await this.currentUser.updatePassword(newPassword);
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+}
+
+// Initialize Auth Manager
+const authManager = new AuthManager();
+
+// DOM Event Listeners for Login Page
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for firebase to be available
-    if(window.auth && window.database) {
-        auth = window.auth;
-        database = window.database;
-        initializeAuth();
+    // Check if on login page
+    if (document.getElementById('loginForm')) {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        // Login form submit
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                showLoading('Logging in...');
+                await authManager.login(email, password);
+                hideLoading();
+            } catch (error) {
+                hideLoading();
+                showToast('error', error.message);
+            }
+        });
+        
+        // Register form submit
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const ffid = document.getElementById('registerFFID').value;
+            
+            try {
+                showLoading('Creating account...');
+                await authManager.register(email, password, name, ffid);
+                hideLoading();
+            } catch (error) {
+                hideLoading();
+                showToast('error', error.message);
+            }
+        });
+        
+        // Setup tab switching
+        const authTab = new bootstrap.Tab(document.querySelector('#authTab button[data-bs-target="#login"]'));
+        
+        // Check if register tab is requested
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('register') === 'true') {
+            const registerTab = new bootstrap.Tab(document.querySelector('#authTab button[data-bs-target="#register"]'));
+            registerTab.show();
+        }
     }
 });
 
-function initializeAuth() {
-    // Check authentication status
-    onAuthStateChanged(auth, (user) => {
-        const authStatus = document.getElementById('authStatus');
-        if(authStatus) {
-            if (user) {
-                authStatus.innerHTML = `
-                    <p>Welcome, ${user.email}</p>
-                    <button onclick="logout()">Logout</button>
-                `;
-            } else {
-                authStatus.innerHTML = `
-                    <p>You are not logged in</p>
-                    <a href="login.html">Login here</a>
-                `;
-            }
-        }
-    });
+// UI Helper Functions
+function showLoading(message = 'Loading...') {
+    // Create loading overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = `
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>${message}</p>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
 }
 
-// Register new user
-window.registerUser = async function(name, email, password, ffid) {
-    console.log('Registering user:', {name, email, ffid});
+function hideLoading() {
+    const overlay = document.querySelector('.loading-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+function showToast(type, message) {
+    // Create toast
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-body">
+            <strong>${type === 'error' ? 'Error' : 'Success'}:</strong> ${message}
+        </div>
+    `;
     
-    try {
-        // Create user in Firebase Auth
-        console.log('Creating user in Firebase Auth...');
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        console.log('User created in Auth:', user.uid);
-        
-        // Save user data to Realtime Database
-        console.log('Saving to database...');
-        await set(ref(database, 'users/' + user.uid), {
-            name: name,
-            email: email,
-            ffid: ffid,
-            balance: 100, // Free bonus for new users
-            kills: 0,
-            wins: 0,
-            matches: 0,
-            role: 'user',
-            joinDate: new Date().toISOString(),
-            isActive: true,
-            createdAt: Date.now()
-        });
-        
-        console.log('Registration successful!');
-        return {success: true, message: 'Registration successful!'};
-        
-    } catch (error) {
-        console.error('Registration error:', error);
-        
-        // Show specific error messages
-        let errorMessage = 'Registration failed! ';
-        
-        switch(error.code) {
-            case 'auth/email-already-in-use':
-                errorMessage += 'This email is already registered.';
-                break;
-            case 'auth/invalid-email':
-                errorMessage += 'Invalid email address.';
-                break;
-            case 'auth/weak-password':
-                errorMessage += 'Password should be at least 6 characters.';
-                break;
-            case 'auth/network-request-failed':
-                errorMessage += 'Network error. Please check your connection.';
-                break;
-            default:
-                errorMessage += error.message;
+    document.body.appendChild(toast);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// Password reset function
+async function resetPassword() {
+    const email = prompt('Enter your email address:');
+    if (email) {
+        try {
+            await authManager.resetPassword(email);
+            showToast('success', 'Password reset email sent!');
+        } catch (error) {
+            showToast('error', error.message);
         }
-        
-        return {success: false, message: errorMessage};
     }
-};
-
-// Login user
-window.loginUser = async function(email, password) {
-    console.log('Logging in:', email);
-    
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log('Login successful:', userCredential.user.uid);
-        return {success: true, message: 'Login successful!'};
-        
-    } catch (error) {
-        console.error('Login error:', error);
-        
-        let errorMessage = 'Login failed! ';
-        
-        switch(error.code) {
-            case 'auth/user-not-found':
-                errorMessage += 'No user found with this email.';
-                break;
-            case 'auth/wrong-password':
-                errorMessage += 'Incorrect password.';
-                break;
-            case 'auth/invalid-email':
-                errorMessage += 'Invalid email address.';
-                break;
-            default:
-                errorMessage += error.message;
-        }
-        
-        return {success: false, message: errorMessage};
-    }
-};
-
-// Logout user
-window.logout = async function() {
-    try {
-        await signOut(auth);
-        alert('Logged out successfully!');
-        window.location.href = 'index.html';
-    } catch (error) {
-        alert('Logout failed: ' + error.message);
-    }
-};
-
-// Get current user data
-window.getCurrentUserData = async function() {
-    const user = auth.currentUser;
-    if (!user) return null;
-    
-    try {
-        const snapshot = await get(ref(database, 'users/' + user.uid));
-        return snapshot.val();
-    } catch (error) {
-        console.error('Error getting user data:', error);
-        return null;
-    }
-};
+}
